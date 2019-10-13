@@ -65,7 +65,7 @@ public final class Bootstrap {
         // 加载类的时候执行。
         // Will always be non-null
         String userDir = System.getProperty("user.dir");
-        // 首先获取catalina.home的路径地址
+        // 首先获取catalina.home的路径地址 是tomcat程序的安装目录
         String home = System.getProperty(Globals.CATALINA_HOME_PROP);
         File homeFile = null;
         if (home != null) {
@@ -101,10 +101,9 @@ public final class Bootstrap {
         }
 
         catalinaHomeFile = homeFile;
-        System.setProperty(
-                Globals.CATALINA_HOME_PROP, catalinaHomeFile.getPath());
+        System.setProperty(Globals.CATALINA_HOME_PROP, catalinaHomeFile.getPath());
 
-        // Then base
+        // 获取
         String base = System.getProperty(Globals.CATALINA_BASE_PROP);
         if (base == null) {
             catalinaBaseFile = catalinaHomeFile;
