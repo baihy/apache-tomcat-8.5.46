@@ -138,6 +138,7 @@ public final class Bootstrap {
     // -------------------------------------------------------- Private Methods
     private void initClassLoaders() {
         try {
+            // 获取commons
             commonLoader = createClassLoader("common", null);
             if (commonLoader == null) {
                 // no config file, default to this loader - we might be in a 'single' env.
