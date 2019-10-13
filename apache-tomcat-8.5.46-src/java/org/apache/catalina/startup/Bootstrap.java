@@ -16,6 +16,13 @@
  */
 package org.apache.catalina.startup;
 
+import org.apache.catalina.Globals;
+import org.apache.catalina.security.SecurityClassLoad;
+import org.apache.catalina.startup.ClassLoaderFactory.Repository;
+import org.apache.catalina.startup.ClassLoaderFactory.RepositoryType;
+import org.apache.juli.logging.Log;
+import org.apache.juli.logging.LogFactory;
+
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -26,13 +33,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.apache.catalina.Globals;
-import org.apache.catalina.security.SecurityClassLoad;
-import org.apache.catalina.startup.ClassLoaderFactory.Repository;
-import org.apache.catalina.startup.ClassLoaderFactory.RepositoryType;
-import org.apache.juli.logging.Log;
-import org.apache.juli.logging.LogFactory;
 
 
 /**
@@ -62,13 +62,12 @@ public final class Bootstrap {
     private static final Pattern PATH_PATTERN = Pattern.compile("(\".*?\")|(([^,])*)");
 
     static {
+        // 加载类的时候执行。
         // Will always be non-null
         String userDir = System.getProperty("user.dir");
-
-        // Home first
+        // 首先获取catalina.home的路径地址
         String home = System.getProperty(Globals.CATALINA_HOME_PROP);
         File homeFile = null;
-
         if (home != null) {
             File f = new File(home);
             try {
@@ -77,12 +76,10 @@ public final class Bootstrap {
                 homeFile = f.getAbsoluteFile();
             }
         }
-
         if (homeFile == null) {
             // First fall-back. See if current directory is a bin directory
             // in a normal Tomcat install
             File bootstrapJar = new File(userDir, "bootstrap.jar");
-
             if (bootstrapJar.exists()) {
                 File f = new File(userDir, "..");
                 try {
@@ -449,9 +446,7 @@ public final class Bootstrap {
 
 
     /**
-     * Main method and entry point when starting Tomcat via the provided
-     * scripts.
-     *
+     * tomcat程序的入口
      * @param args Command line arguments to be processed
      */
     public static void main(String args[]) {
@@ -460,6 +455,7 @@ public final class Bootstrap {
             // Don't set daemon until init() has completed
             Bootstrap bootstrap = new Bootstrap();
             try {
+                // 调用初始化方法
                 bootstrap.init();
             } catch (Throwable t) {
                 handleThrowable(t);

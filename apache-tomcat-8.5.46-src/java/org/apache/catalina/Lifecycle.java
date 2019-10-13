@@ -211,6 +211,7 @@ public interface Lifecycle {
      * @exception LifecycleException if this component detects a fatal error
      *  that prevents this component from being used
      */
+    // 生命周期中的初始化方法
     public void init() throws LifecycleException;
 
     /**
@@ -239,6 +240,7 @@ public interface Lifecycle {
      * @exception LifecycleException if this component detects a fatal error
      *  that prevents this component from being used
      */
+    // 生命周期中的启动方法
     public void start() throws LifecycleException;
 
 
@@ -273,6 +275,7 @@ public interface Lifecycle {
      * @exception LifecycleException if this component detects a fatal error
      *  that needs to be reported
      */
+    // 生命周期中的停止方法
     public void stop() throws LifecycleException;
 
     /**
