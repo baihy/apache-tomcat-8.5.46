@@ -16,27 +16,14 @@
  */
 package org.apache.catalina.mapper;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.catalina.Container;
-import org.apache.catalina.ContainerEvent;
-import org.apache.catalina.ContainerListener;
-import org.apache.catalina.Context;
-import org.apache.catalina.Engine;
-import org.apache.catalina.Host;
-import org.apache.catalina.Lifecycle;
-import org.apache.catalina.LifecycleEvent;
-import org.apache.catalina.LifecycleException;
-import org.apache.catalina.LifecycleListener;
-import org.apache.catalina.LifecycleState;
-import org.apache.catalina.Service;
-import org.apache.catalina.WebResourceRoot;
-import org.apache.catalina.Wrapper;
+import org.apache.catalina.*;
 import org.apache.catalina.util.LifecycleMBeanBase;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.res.StringManager;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -68,7 +55,7 @@ public class MapperListener extends LifecycleMBeanBase
      * The string manager for this package.
      */
     private static final StringManager sm =
-        StringManager.getManager(Constants.Package);
+            StringManager.getManager(Constants.Package);
 
     /**
      * The domain (effectively the engine) this mapper is associated with
@@ -104,12 +91,13 @@ public class MapperListener extends LifecycleMBeanBase
         findDefaultHost();
 
         addListeners(engine);
-
+        // 获取Host
         Container[] conHosts = engine.findChildren();
         for (Container conHost : conHosts) {
             Host host = (Host) conHost;
             if (!LifecycleState.NEW.equals(host.getState())) {
                 // Registering the host will register the context and wrappers
+                // 注册host
                 registerHost(host);
             }
         }
@@ -266,7 +254,7 @@ public class MapperListener extends LifecycleMBeanBase
 
         boolean found = false;
 
-        if (defaultHost != null && defaultHost.length() >0) {
+        if (defaultHost != null && defaultHost.length() > 0) {
             Container[] containers = engine.findChildren();
 
             for (Container container : containers) {
@@ -286,7 +274,7 @@ public class MapperListener extends LifecycleMBeanBase
             }
         }
 
-        if(found) {
+        if (found) {
             mapper.setDefaultHostName(defaultHost);
         } else {
             log.warn(sm.getString("mapperListener.unknownDefaultHost",
@@ -302,15 +290,15 @@ public class MapperListener extends LifecycleMBeanBase
 
         String[] aliases = host.findAliases();
         mapper.addHost(host.getName(), aliases, host);
-
+        // 获取host标签的Context子标签
         for (Container container : host.findChildren()) {
             if (container.getState().isAvailable()) {
+                // 注册Context
                 registerContext((Context) container);
             }
         }
-        if(log.isDebugEnabled()) {
-            log.debug(sm.getString("mapperListener.registerHost",
-                    host.getName(), domain, service));
+        if (log.isDebugEnabled()) {
+            log.debug(sm.getString("mapperListener.registerHost", host.getName(), domain, service));
         }
     }
 
@@ -324,7 +312,7 @@ public class MapperListener extends LifecycleMBeanBase
 
         mapper.removeHost(hostname);
 
-        if(log.isDebugEnabled()) {
+        if (log.isDebugEnabled()) {
             log.debug(sm.getString("mapperListener.unregisterHost", hostname,
                     domain, service));
         }
@@ -349,10 +337,10 @@ public class MapperListener extends LifecycleMBeanBase
         String[] mappings = wrapper.findMappings();
 
         for (String mapping : mappings) {
-            mapper.removeWrapper(hostName, contextPath, version,  mapping);
+            mapper.removeWrapper(hostName, contextPath, version, mapping);
         }
 
-        if(log.isDebugEnabled()) {
+        if (log.isDebugEnabled()) {
             log.debug(sm.getString("mapperListener.unregisterWrapper",
                     wrapperName, contextPath, service));
         }
@@ -368,28 +356,26 @@ public class MapperListener extends LifecycleMBeanBase
         if ("/".equals(contextPath)) {
             contextPath = "";
         }
-        Host host = (Host)context.getParent();
-
+        Host host = (Host) context.getParent();
+        // 获取根路径
         WebResourceRoot resources = context.getResources();
+        // 获取web.xml文件中的<welcome-file-list>标签，指定的首页
         String[] welcomeFiles = context.findWelcomeFiles();
         List<WrapperMappingInfo> wrappers = new ArrayList<>();
 
+        //
         for (Container container : context.findChildren()) {
+            // 处理所有的Servlet和jsp
             prepareWrapperMappingInfo(context, (Wrapper) container, wrappers);
-
-            if(log.isDebugEnabled()) {
-                log.debug(sm.getString("mapperListener.registerWrapper",
-                        container.getName(), contextPath, service));
+            if (log.isDebugEnabled()) {
+                log.debug(sm.getString("mapperListener.registerWrapper", container.getName(), contextPath, service));
             }
         }
 
-        mapper.addContextVersion(host.getName(), host, contextPath,
-                context.getWebappVersion(), context, welcomeFiles, resources,
-                wrappers);
+        mapper.addContextVersion(host.getName(), host, contextPath, context.getWebappVersion(), context, welcomeFiles, resources, wrappers);
 
-        if(log.isDebugEnabled()) {
-            log.debug(sm.getString("mapperListener.registerContext",
-                    contextPath, service));
+        if (log.isDebugEnabled()) {
+            log.debug(sm.getString("mapperListener.registerContext", contextPath, service));
         }
     }
 
@@ -442,7 +428,7 @@ public class MapperListener extends LifecycleMBeanBase
         prepareWrapperMappingInfo(context, wrapper, wrappers);
         mapper.addWrappers(hostName, contextPath, version, wrappers);
 
-        if(log.isDebugEnabled()) {
+        if (log.isDebugEnabled()) {
             log.debug(sm.getString("mapperListener.registerWrapper",
                     wrapper.getName(), contextPath, service));
         }
@@ -457,13 +443,13 @@ public class MapperListener extends LifecycleMBeanBase
      * @param wrappers
      */
     private void prepareWrapperMappingInfo(Context context, Wrapper wrapper,
-            List<WrapperMappingInfo> wrappers) {
+                                           List<WrapperMappingInfo> wrappers) {
         String wrapperName = wrapper.getName();
         boolean resourceOnly = context.isResourceOnlyServlet(wrapperName);
         String[] mappings = wrapper.findMappings();
         for (String mapping : mappings) {
             boolean jspWildCard = (wrapperName.equals("jsp")
-                                   && mapping.endsWith("/*"));
+                    && mapping.endsWith("/*"));
             wrappers.add(new WrapperMappingInfo(mapping, wrapper, jspWildCard,
                     resourceOnly));
         }

@@ -125,26 +125,31 @@ public final class Bootstrap {
 
 
     /**
-     * Daemon reference.
+     * 通过反射初始化org.apache.catalina.startup.Catalina对象。
+     *  在这个类上，所有的都是通过反射调用的Catalina对象的方法。
      */
     private Object catalinaDaemon = null;
 
     /**
-     * tomcat定义的三个类加载器。注意：三个类加载器是CatalinaLoader
+     * tomcat定义的三个类加载器。注意：三个类加载器是URLClassLoader
      */
     ClassLoader commonLoader = null;
     ClassLoader catalinaLoader = null; // 是服务的类加载器
     ClassLoader sharedLoader = null; //  web的类加载器
+
     // -------------------------------------------------------- Private Methods
     private void initClassLoaders() {
         try {
-            // 获取commons
+            // 定义了三种类加载器。
+            // 注意：这里的类加载器的父类加载器
             commonLoader = createClassLoader("common", null);
             if (commonLoader == null) {
                 // no config file, default to this loader - we might be in a 'single' env.
                 commonLoader = this.getClass().getClassLoader();
             }
             // 通过源码我们知道，三种类加载的配置分别在catalina.properties这个配置文件中，指定的。
+            // 因为在catalina.properties文件中，没有指定server.loader。所以：catalinaLoader和sharedLoader都等于commonLoader
+            // 且这三种类加载器都是URLClassLoader类型的
             catalinaLoader = createClassLoader("server", commonLoader);
             sharedLoader = createClassLoader("shared", commonLoader);
         } catch (Throwable t) {
@@ -154,13 +159,13 @@ public final class Bootstrap {
         }
     }
 
-
-    private ClassLoader createClassLoader(String name, ClassLoader parent)
-            throws Exception {
+    //  根据catalina.properties的配置文件中的配置加载ClassLoader
+    private ClassLoader createClassLoader(String name, ClassLoader parent) throws Exception {
 
         String value = CatalinaProperties.getProperty(name + ".loader");
-        if ((value == null) || (value.equals("")))
+        if ((value == null) || (value.equals(""))) {
             return parent;
+        }
 
         value = replace(value);
 
@@ -173,25 +178,19 @@ public final class Bootstrap {
             try {
                 @SuppressWarnings("unused")
                 URL url = new URL(repository);
-                repositories.add(
-                        new Repository(repository, RepositoryType.URL));
+                repositories.add(new Repository(repository, RepositoryType.URL));
                 continue;
             } catch (MalformedURLException e) {
                 // Ignore
             }
-
             // Local repository
             if (repository.endsWith("*.jar")) {
-                repository = repository.substring
-                        (0, repository.length() - "*.jar".length());
-                repositories.add(
-                        new Repository(repository, RepositoryType.GLOB));
+                repository = repository.substring(0, repository.length() - "*.jar".length());
+                repositories.add(new Repository(repository, RepositoryType.GLOB));
             } else if (repository.endsWith(".jar")) {
-                repositories.add(
-                        new Repository(repository, RepositoryType.JAR));
+                repositories.add(new Repository(repository, RepositoryType.JAR));
             } else {
-                repositories.add(
-                        new Repository(repository, RepositoryType.DIR));
+                repositories.add(new Repository(repository, RepositoryType.DIR));
             }
         }
 
@@ -279,7 +278,8 @@ public final class Bootstrap {
 
         // 通过反射调用org.apache.catalina.startup.Catalina的setParentClassLoader方法，
         method.invoke(startupInstance, paramValues);
-
+        // 通过反射实例化org.apache.catalina.startup.Catalina的对象。
+        //
         catalinaDaemon = startupInstance;
 
     }
@@ -288,8 +288,7 @@ public final class Bootstrap {
     /**
      * Load daemon.
      */
-    private void load(String[] arguments)
-            throws Exception {
+    private void load(String[] arguments) throws Exception {
 
         // Call the load() method
         String methodName = "load";
@@ -304,10 +303,11 @@ public final class Bootstrap {
             param = new Object[1];
             param[0] = arguments;
         }
-        Method method =
-                catalinaDaemon.getClass().getMethod(methodName, paramTypes);
-        if (log.isDebugEnabled())
+        // 调用catalina的load方法
+        Method method = catalinaDaemon.getClass().getMethod(methodName, paramTypes);
+        if (log.isDebugEnabled()) {
             log.debug("Calling startup class " + method);
+        }
         method.invoke(catalinaDaemon, param);
 
     }
@@ -317,10 +317,8 @@ public final class Bootstrap {
      * getServer() for configtest
      */
     private Object getServer() throws Exception {
-
         String methodName = "getServer";
-        Method method =
-                catalinaDaemon.getClass().getMethod(methodName);
+        Method method = catalinaDaemon.getClass().getMethod(methodName);
         return method.invoke(catalinaDaemon);
 
     }
@@ -365,8 +363,7 @@ public final class Bootstrap {
      *
      * @throws Exception Fatal stop error
      */
-    public void stop()
-            throws Exception {
+    public void stop() throws Exception {
 
         Method method = catalinaDaemon.getClass().getMethod("stop", (Class[]) null);
         method.invoke(catalinaDaemon, (Object[]) null);
@@ -468,7 +465,7 @@ public final class Bootstrap {
             Bootstrap bootstrap = new Bootstrap();
             try {
                 // 调用初始化方法
-                bootstrap.init(); // 初始化bootstrap
+                bootstrap.init(); // 初始化bootstrap，完成了ClassLoader的初始化。
                 // init方法，主要是实例化了catalina对象，即初始化catalinaDaemon这个成员变量，初始化启动实例
             } catch (Throwable t) {
                 handleThrowable(t);
@@ -493,7 +490,7 @@ public final class Bootstrap {
             // 从这里可以看出。start和started命令是等价的
             if (command.equals("startd")) {
                 args[args.length - 1] = "start";
-                daemon.load(args);
+                daemon.load(args); // load()方法，解析service.xml文件，并初始化Server对象。
                 daemon.start();
             } else if (command.equals("stopd")) {
                 args[args.length - 1] = "stop";

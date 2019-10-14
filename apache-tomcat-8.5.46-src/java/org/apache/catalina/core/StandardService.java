@@ -17,20 +17,7 @@
 package org.apache.catalina.core;
 
 
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
-import java.util.ArrayList;
-
-import javax.management.ObjectName;
-
-import org.apache.catalina.Container;
-import org.apache.catalina.Engine;
-import org.apache.catalina.Executor;
-import org.apache.catalina.JmxEnabled;
-import org.apache.catalina.LifecycleException;
-import org.apache.catalina.LifecycleState;
-import org.apache.catalina.Server;
-import org.apache.catalina.Service;
+import org.apache.catalina.*;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.mapper.Mapper;
 import org.apache.catalina.mapper.MapperListener;
@@ -38,6 +25,11 @@ import org.apache.catalina.util.LifecycleMBeanBase;
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.res.StringManager;
+
+import javax.management.ObjectName;
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
+import java.util.ArrayList;
 
 
 /**
@@ -419,6 +411,7 @@ public class StandardService extends LifecycleMBeanBase implements Service {
         // Start our defined Container first
         if (engine != null) {
             synchronized (engine) {
+                // engine的启动
                 engine.start();
             }
         }
@@ -428,7 +421,7 @@ public class StandardService extends LifecycleMBeanBase implements Service {
                 executor.start();
             }
         }
-
+        // mapperListener的启动
         mapperListener.start();
 
         // Start our defined Connectors second
@@ -528,33 +521,35 @@ public class StandardService extends LifecycleMBeanBase implements Service {
     @Override
     protected void initInternal() throws LifecycleException {
 
+        /**
+         * 初始化了四个组件分别是：Engine， Executor，MapperListener，Connector
+         */
         super.initInternal();
-
+        // 在这里面初始化engine
         if (engine != null) {
             engine.init();
         }
-
         // Initialize any Executors
+        // 初始化了线程池
         for (Executor executor : findExecutors()) {
             if (executor instanceof JmxEnabled) {
                 ((JmxEnabled) executor).setDomain(getDomain());
             }
             executor.init();
         }
-
         // Initialize mapper listener
+        // 初始化了映射监听器
         mapperListener.init();
 
         // Initialize our defined Connectors
+        // 初始化Connector
         synchronized (connectorsLock) {
             for (Connector connector : connectors) {
                 try {
                     connector.init();
                 } catch (Exception e) {
-                    String message = sm.getString(
-                            "standardService.connector.initFailed", connector);
+                    String message = sm.getString("standardService.connector.initFailed", connector);
                     log.error(message, e);
-
                     if (Boolean.getBoolean("org.apache.catalina.startup.EXIT_ON_INIT_FAILURE"))
                         throw new LifecycleException(message);
                 }

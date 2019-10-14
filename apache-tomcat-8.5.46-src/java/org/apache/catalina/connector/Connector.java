@@ -16,17 +16,6 @@
  */
 package org.apache.catalina.connector;
 
-import java.io.UnsupportedEncodingException;
-import java.net.InetAddress;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Locale;
-
-import javax.management.ObjectName;
-
 import org.apache.catalina.Globals;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.LifecycleState;
@@ -44,6 +33,16 @@ import org.apache.tomcat.util.buf.B2CConverter;
 import org.apache.tomcat.util.net.SSLHostConfig;
 import org.apache.tomcat.util.net.openssl.OpenSSLImplementation;
 import org.apache.tomcat.util.res.StringManager;
+
+import javax.management.ObjectName;
+import java.io.UnsupportedEncodingException;
+import java.net.InetAddress;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Locale;
 
 
 /**
@@ -222,9 +221,9 @@ public class Connector extends LifecycleMBeanBase  {
     /**
      * Coyote Protocol handler class name.
      * Defaults to the Coyote HTTP/1.1 protocolHandler.
+     * 默认的协议是http1.1和NIO实现的。
      */
-    protected String protocolHandlerClassName =
-        "org.apache.coyote.http11.Http11NioProtocol";
+    protected String protocolHandlerClassName = "org.apache.coyote.http11.Http11NioProtocol";
 
 
     /**
@@ -966,6 +965,7 @@ public class Connector extends LifecycleMBeanBase  {
         super.initInternal();
 
         // Initialize adapter
+        // 初始化了一个适配器
         adapter = new CoyoteAdapter(this);
         protocolHandler.setAdapter(adapter);
 
@@ -990,6 +990,7 @@ public class Connector extends LifecycleMBeanBase  {
         }
 
         try {
+            // 协议处理器
             protocolHandler.init();
         } catch (Exception e) {
             throw new LifecycleException(
