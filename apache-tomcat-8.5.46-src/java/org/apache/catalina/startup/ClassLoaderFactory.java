@@ -170,8 +170,9 @@ public final class ClassLoaderFactory {
                         continue;
                     }
                     URL url = buildClassLoaderUrl(directory);
-                    if (log.isDebugEnabled())
+                    if (log.isDebugEnabled()) {
                         log.debug("  Including directory " + url);
+                    }
                     set.add(url);
                 } else if (repository.getType() == RepositoryType.JAR) {
                     File file = new File(repository.getLocation());
@@ -226,10 +227,11 @@ public final class ClassLoaderFactory {
                 new PrivilegedAction<URLClassLoader>() {
                     @Override
                     public URLClassLoader run() {
-                        if (parent == null)
+                        if (parent == null) {
                             return new URLClassLoader(array);
-                        else
+                        } else {
                             return new URLClassLoader(array, parent);
+                        }
                     }
                 });
     }

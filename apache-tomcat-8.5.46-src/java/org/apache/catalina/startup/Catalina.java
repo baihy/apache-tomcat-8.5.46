@@ -71,8 +71,7 @@ public class Catalina {
     /**
      * The string manager for this package.
      */
-    protected static final StringManager sm =
-            StringManager.getManager(Constants.Package);
+    protected static final StringManager sm = StringManager.getManager(Constants.Package);
 
 
     // ----------------------------------------------------- Instance Variables
@@ -91,8 +90,7 @@ public class Catalina {
     /**
      * The shared extensions class loader for this server.
      */
-    protected ClassLoader parentClassLoader =
-            Catalina.class.getClassLoader();
+    protected ClassLoader parentClassLoader = Catalina.class.getClassLoader();
 
 
     /**
@@ -542,7 +540,7 @@ public class Catalina {
         initNaming();
 
         // Create and execute our Digester
-        // 解析service.xml文件
+        // 解析server.xml文件
         Digester digester = createStartDigester();
 
         InputSource inputSource = null;
@@ -550,16 +548,17 @@ public class Catalina {
         File file = null;
         try {
             try {
-                file = configFile();
+                file = configFile();//获取server.xml
                 inputStream = new FileInputStream(file);
                 inputSource = new InputSource(file.toURI().toURL().toString());
             } catch (Exception e) {
-                /*if (log.isDebugEnabled()) {
+                if (log.isDebugEnabled()) {
                     log.debug(sm.getString("catalina.configFail", file), e);
-                }*/
+                }
             }
             if (inputStream == null) {
                 try {
+                    // 通过类加载器，加载server.xml文件
                     inputStream = getClass().getClassLoader().getResourceAsStream(getConfigFile());
                     inputSource = new InputSource(getClass().getClassLoader().getResource(getConfigFile()).toString());
                 } catch (Exception e) {

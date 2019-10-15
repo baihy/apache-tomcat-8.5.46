@@ -103,6 +103,7 @@ public abstract class LifecycleBase implements Lifecycle {
         try {
             setStateInternal(LifecycleState.INITIALIZING, null, false);
             // 调用子类中， 抽象方法的实现
+            /****<初始化的核心代码/>***/
             initInternal(); // 抽象方法。内部初始化
             setStateInternal(LifecycleState.INITIALIZED, null, false);
         } catch (Throwable t) {

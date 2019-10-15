@@ -126,12 +126,13 @@ public final class Bootstrap {
 
     /**
      * 通过反射初始化org.apache.catalina.startup.Catalina对象。
-     *  在这个类上，所有的都是通过反射调用的Catalina对象的方法。
+     * 在这个类上，所有的都是通过反射调用的Catalina对象的方法。
      */
     private Object catalinaDaemon = null;
 
     /**
      * tomcat定义的三个类加载器。注意：三个类加载器是URLClassLoader
+     * URLClassLoader的作用是：加载外部的jar包。
      */
     ClassLoader commonLoader = null;
     ClassLoader catalinaLoader = null; // 是服务的类加载器
@@ -260,15 +261,16 @@ public final class Bootstrap {
        /* if (log.isDebugEnabled()) {
             log.debug("Loading startup class");
         }*/
-        // 获取Catalina的字节码
+        // 获取Catalina的字节码对象
+        // 这里是通过URLClassLoader的子类AppClassLoader来实现加载Catalina对象的
         Class<?> startupClass = catalinaLoader.loadClass("org.apache.catalina.startup.Catalina");
         // 实例化Catalina对象
         Object startupInstance = startupClass.getConstructor().newInstance();
 
         // Set the shared extensions class loader
-        /*if (log.isDebugEnabled()) {
+        if (log.isDebugEnabled()) {
             log.debug("Setting startup class properties");
-        }*/
+        }
         String methodName = "setParentClassLoader";
         Class<?> paramTypes[] = new Class[1];
         paramTypes[0] = Class.forName("java.lang.ClassLoader");
@@ -279,9 +281,7 @@ public final class Bootstrap {
         // 通过反射调用org.apache.catalina.startup.Catalina的setParentClassLoader方法，
         method.invoke(startupInstance, paramValues);
         // 通过反射实例化org.apache.catalina.startup.Catalina的对象。
-        //
         catalinaDaemon = startupInstance;
-
     }
 
 
@@ -291,6 +291,7 @@ public final class Bootstrap {
     private void load(String[] arguments) throws Exception {
 
         // Call the load() method
+        //  通过反射调用Catalina的load方法。
         String methodName = "load";
         Object param[];
         Class<?> paramTypes[];
@@ -460,6 +461,10 @@ public final class Bootstrap {
      */
     public static void main(String args[]) {
 
+        /**
+         * 注意：在执行main方法之前，还会执行当前类中的static语句块中的代码。
+         *   static语句块的核心作用是：设置了catalina-home和catalina-base的两个环境变量
+         */
         if (daemon == null) {
             // Don't set daemon until init() has completed
             Bootstrap bootstrap = new Bootstrap();

@@ -54,8 +54,7 @@ public class MapperListener extends LifecycleMBeanBase
     /**
      * The string manager for this package.
      */
-    private static final StringManager sm =
-            StringManager.getManager(Constants.Package);
+    private static final StringManager sm = StringManager.getManager(Constants.Package);
 
     /**
      * The domain (effectively the engine) this mapper is associated with
@@ -82,14 +81,11 @@ public class MapperListener extends LifecycleMBeanBase
     public void startInternal() throws LifecycleException {
 
         setState(LifecycleState.STARTING);
-
         Engine engine = service.getContainer();
         if (engine == null) {
             return;
         }
-
         findDefaultHost();
-
         addListeners(engine);
         // 获取Host
         Container[] conHosts = engine.findChildren();
