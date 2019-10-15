@@ -43,11 +43,9 @@ public final class ContextName {
      *                              removed?
      */
     public ContextName(String name, boolean stripFileExtension) {
-
+        // 这里的name是文件的名字
         String tmp1 = name;
-
         // Convert Context names and display names to base names
-
         // Strip off any leading "/"
         if (tmp1.startsWith("/")) {
             tmp1 = tmp1.substring(1);
@@ -62,14 +60,11 @@ public final class ContextName {
         }
 
         // Remove any file extensions
-        if (stripFileExtension &&
-                (tmp1.toLowerCase(Locale.ENGLISH).endsWith(".war") ||
-                        tmp1.toLowerCase(Locale.ENGLISH).endsWith(".xml"))) {
+        if (stripFileExtension && (tmp1.toLowerCase(Locale.ENGLISH).endsWith(".war") || tmp1.toLowerCase(Locale.ENGLISH).endsWith(".xml"))) {
             tmp1 = tmp1.substring(0, tmp1.length() -4);
         }
 
         baseName = tmp1;
-
         String tmp2;
         // Extract version number
         int versionIndex = baseName.indexOf(VERSION_MARKER);
@@ -86,7 +81,6 @@ public final class ContextName {
         } else {
             path = "/" + tmp2.replaceAll(FWD_SLASH_REPLACEMENT, "/");
         }
-
         if (versionIndex > -1) {
             this.name = path + VERSION_MARKER + version;
         } else {

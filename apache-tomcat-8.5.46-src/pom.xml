@@ -6,7 +6,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.apache.tomcat</groupId>
     <artifactId>apache-tomcat-8.5.46-src</artifactId>
-    <version>8.5</version>
+    <version>8.5.46</version>
     <build>
         <finalName>Tomcat8.0</finalName>
         <sourceDirectory>java</sourceDirectory>
