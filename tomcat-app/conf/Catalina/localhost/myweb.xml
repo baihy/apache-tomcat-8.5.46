@@ -1,2 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Context docBase="/Users/huayang.bai/personal/works/tools/tomcat/test" name = "abc" path="/test" reloadable="true"/>
+<!--
+    部署文件的要求是：1.文件名称是部署的项目名称，部署文件xml文件可以不要xml文件的头。只要有个Context标签即可。
+    核心的属性是：docBase属性和reloadable属性。
+    docBase属性指定的路径地址可以是相对路径，特别注意：这个路径相对于catalina-base环境变量下的webapps文件夹的路径
+    加上配置的路径
+-->
+<Context docBase="ROOT" reloadable="true"/>

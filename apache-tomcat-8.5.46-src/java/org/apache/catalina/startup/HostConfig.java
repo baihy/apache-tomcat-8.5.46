@@ -583,6 +583,7 @@ public class HostConfig implements LifecycleListener {
             if (context.getDocBase() != null) { // 判断docBase不为null
                 File docBase = new File(context.getDocBase());
                 if (!docBase.isAbsolute()) {
+                    // 判断docBean配置路径是否是相对路径，如果是，则是相对tomcat-app/webapps这个文件夹的位置
                     docBase = new File(host.getAppBaseFile(), context.getDocBase());
                 }
                 // If external docBase, register .xml as redeploy first
