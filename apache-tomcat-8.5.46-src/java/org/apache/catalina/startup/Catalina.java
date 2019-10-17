@@ -288,8 +288,7 @@ public class Catalina {
         digester.setUseContextClassLoader(true);
 
         // Configure the actions we will be using
-        digester.addObjectCreate("Server",
-                "org.apache.catalina.core.StandardServer",
+        digester.addObjectCreate("Server", "org.apache.catalina.core.StandardServer",
                 "className");
         digester.addSetProperties("Server");
         digester.addSetNext("Server",
@@ -524,6 +523,7 @@ public class Catalina {
 
     /**
      * Start a new server instance.
+     * 启动tomcat的时候，需要调用的初始化方法。
      */
     public void load() {
 
@@ -548,6 +548,9 @@ public class Catalina {
         File file = null;
         try {
             try {
+                /**
+                 * 获取conf文件夹下的server.xml，tomcat实例核心的配置文件。
+                 */
                 file = configFile();//获取server.xml
                 inputStream = new FileInputStream(file);
                 inputSource = new InputSource(file.toURI().toURL().toString());
@@ -598,6 +601,7 @@ public class Catalina {
 
             try {
                 inputSource.setByteStream(inputStream);
+                // 把Catalina对象压入数组栈中。
                 digester.push(this);
                 // 解析service.xml文件
                 digester.parse(inputSource);

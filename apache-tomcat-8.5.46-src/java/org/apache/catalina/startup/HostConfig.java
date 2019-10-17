@@ -410,6 +410,7 @@ public class HostConfig implements LifecycleListener {
         File appBase = host.getAppBaseFile();
         // 获取catalina-base下的conf/Service名称/主机名   组成的路径。
         // 即：tomcat-app/conf/Catalina/localhost
+        // 如果在server.xml文件中host标签下配置的Context标签的话，是在StandardHost处理子标子标签的时候， 添加到子标签中。
         File configBase = host.getConfigBaseFile();
         String[] filteredAppPaths = filterAppPaths(appBase.list());
         // Deploy XML descriptors from configBase
@@ -558,6 +559,7 @@ public class HostConfig implements LifecycleListener {
             synchronized (digesterLock) {
                 try {
                     // 解析xml，并把xml解析成Context对象
+                    // 这里解析xml文件是conf/Catalina/localhost文件夹下通过热部署部署的项目
                     context = (Context) digester.parse(fis);
                 } catch (Exception e) {
                     log.error(sm.getString("hostConfig.deployDescriptor.error", contextXml.getAbsolutePath()), e);
@@ -601,15 +603,12 @@ public class HostConfig implements LifecycleListener {
             host.addChild(context);
         } catch (Throwable t) {
             ExceptionUtils.handleThrowable(t);
-            log.error(sm.getString("hostConfig.deployDescriptor.error",
-                    contextXml.getAbsolutePath()), t);
+            log.error(sm.getString("hostConfig.deployDescriptor.error", contextXml.getAbsolutePath()), t);
         } finally {
             // Get paths for WAR and expanded WAR in appBase
-
             // default to appBase dir + name
             expandedDocBase = new File(host.getAppBaseFile(), cn.getBaseName());
-            if (context.getDocBase() != null
-                    && !context.getDocBase().toLowerCase(Locale.ENGLISH).endsWith(".war")) {
+            if (context.getDocBase() != null && !context.getDocBase().toLowerCase(Locale.ENGLISH).endsWith(".war")) {
                 // first assume docBase is absolute
                 expandedDocBase = new File(context.getDocBase());
                 if (!expandedDocBase.isAbsolute()) {
@@ -627,8 +626,7 @@ public class HostConfig implements LifecycleListener {
             // watched inside it
             if (isExternalWar) {
                 if (unpackWAR) {
-                    deployedApp.redeployResources.put(expandedDocBase.getAbsolutePath(),
-                            Long.valueOf(expandedDocBase.lastModified()));
+                    deployedApp.redeployResources.put(expandedDocBase.getAbsolutePath(), Long.valueOf(expandedDocBase.lastModified()));
                     addWatchedResources(deployedApp, expandedDocBase.getAbsolutePath(), context);
                 } else {
                     addWatchedResources(deployedApp, null, context);
@@ -638,29 +636,22 @@ public class HostConfig implements LifecycleListener {
                 if (!isExternal) {
                     File warDocBase = new File(expandedDocBase.getAbsolutePath() + ".war");
                     if (warDocBase.exists()) {
-                        deployedApp.redeployResources.put(warDocBase.getAbsolutePath(),
-                                Long.valueOf(warDocBase.lastModified()));
+                        deployedApp.redeployResources.put(warDocBase.getAbsolutePath(), Long.valueOf(warDocBase.lastModified()));
                     } else {
                         // Trigger a redeploy if a WAR is added
-                        deployedApp.redeployResources.put(
-                                warDocBase.getAbsolutePath(),
-                                Long.valueOf(0));
+                        deployedApp.redeployResources.put(warDocBase.getAbsolutePath(), Long.valueOf(0));
                     }
                 }
                 if (unpackWAR) {
-                    deployedApp.redeployResources.put(expandedDocBase.getAbsolutePath(),
-                            Long.valueOf(expandedDocBase.lastModified()));
-                    addWatchedResources(deployedApp,
-                            expandedDocBase.getAbsolutePath(), context);
+                    deployedApp.redeployResources.put(expandedDocBase.getAbsolutePath(), Long.valueOf(expandedDocBase.lastModified()));
+                    addWatchedResources(deployedApp, expandedDocBase.getAbsolutePath(), context);
                 } else {
                     addWatchedResources(deployedApp, null, context);
                 }
                 if (!isExternal) {
                     // For external docBases, the context.xml will have been
                     // added above.
-                    deployedApp.redeployResources.put(
-                            contextXml.getAbsolutePath(),
-                            Long.valueOf(contextXml.lastModified()));
+                    deployedApp.redeployResources.put(contextXml.getAbsolutePath(), Long.valueOf(contextXml.lastModified()));
                 }
             }
             // Add the global redeploy resources (which are never deleted) at
@@ -673,8 +664,7 @@ public class HostConfig implements LifecycleListener {
         }
 
         if (log.isInfoEnabled()) {
-            log.info(sm.getString("hostConfig.deployDescriptor.finished",
-                    contextXml.getAbsolutePath(), Long.valueOf(System.currentTimeMillis() - startTime)));
+            log.info(sm.getString("hostConfig.deployDescriptor.finished", contextXml.getAbsolutePath(), Long.valueOf(System.currentTimeMillis() - startTime)));
         }
     }
 
@@ -740,7 +730,7 @@ public class HostConfig implements LifecycleListener {
                     invalidWars.add(files[i]);
                     continue;
                 }
-
+                // 开启线程进行发布项目的
                 results.add(es.submit(new DeployWar(this, cn, war)));
             }
         }
@@ -793,19 +783,19 @@ public class HostConfig implements LifecycleListener {
     }
 
     /**
-     * Deploy packed WAR.
+     * 部署war包
      *
      * @param cn  The context name
      * @param war The WAR file
      */
     protected void deployWAR(ContextName cn, File war) {
 
-        File xml = new File(host.getAppBaseFile(),
-                cn.getBaseName() + "/" + Constants.ApplicationContextXml);
+        File xml = new File(host.getAppBaseFile(), cn.getBaseName() + "/" + Constants.ApplicationContextXml);
 
         File warTracker = new File(host.getAppBaseFile(), cn.getBaseName() + Constants.WarTracker);
 
         boolean xmlInWar = false;
+        //在构造函数中，对war包进行解压
         try (JarFile jar = new JarFile(war)) {
             JarEntry entry = jar.getJarEntry(Constants.ApplicationContextXml);
             if (entry != null) {
@@ -821,8 +811,7 @@ public class HostConfig implements LifecycleListener {
         boolean useXml = false;
         // If the xml file exists then expandedDir must exists so no need to
         // test that here
-        if (xml.exists() && unpackWARs &&
-                (!warTracker.exists() || warTracker.lastModified() == war.lastModified())) {
+        if (xml.exists() && unpackWARs && (!warTracker.exists() || warTracker.lastModified() == war.lastModified())) {
             useXml = true;
         }
 
@@ -1007,12 +996,11 @@ public class HostConfig implements LifecycleListener {
 
         if (files == null)
             return;
-
+        // 获取一个线程池执行器。
         ExecutorService es = host.getStartStopExecutor();
         List<Future<?>> results = new ArrayList<>();
 
         for (int i = 0; i < files.length; i++) {
-
             if (files[i].equalsIgnoreCase("META-INF"))
                 continue;
             if (files[i].equalsIgnoreCase("WEB-INF"))
@@ -1020,10 +1008,8 @@ public class HostConfig implements LifecycleListener {
             File dir = new File(appBase, files[i]);
             if (dir.isDirectory()) {
                 ContextName cn = new ContextName(files[i], false);
-
                 if (isServiced(cn.getName()) || deploymentExists(cn.getName()))
                     continue;
-
                 results.add(es.submit(new DeployDirectory(this, cn, dir)));
             }
         }
@@ -1796,14 +1782,14 @@ public class HostConfig implements LifecycleListener {
         public boolean loggedDirWarning = false;
     }
 
+    // 通过Context标签配置项目发布
     private static class DeployDescriptor implements Runnable {
 
         private HostConfig config;
         private ContextName cn;
         private File descriptor;
 
-        public DeployDescriptor(HostConfig config, ContextName cn,
-                                File descriptor) {
+        public DeployDescriptor(HostConfig config, ContextName cn, File descriptor) {
             this.config = config;
             this.cn = cn;
             this.descriptor = descriptor;
@@ -1816,8 +1802,10 @@ public class HostConfig implements LifecycleListener {
         }
     }
 
+    /**
+     * 发布war包
+     */
     private static class DeployWar implements Runnable {
-
         private HostConfig config;
         private ContextName cn;
         private File war;
@@ -1834,6 +1822,9 @@ public class HostConfig implements LifecycleListener {
         }
     }
 
+    /**
+     * 发布文件夹项目
+     */
     private static class DeployDirectory implements Runnable {
 
         private HostConfig config;

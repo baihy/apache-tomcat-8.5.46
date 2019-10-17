@@ -193,12 +193,10 @@ public class StandardEngine extends ContainerBase implements Engine {
      */
     @Override
     public void addChild(Container child) {
-
-        if (!(child instanceof Host))
-            throw new IllegalArgumentException
-                    (sm.getString("standardEngine.notHost"));
+        if (!(child instanceof Host)) {
+            throw new IllegalArgumentException(sm.getString("standardEngine.notHost"));
+        }
         super.addChild(child);
-
     }
 
 
@@ -211,8 +209,7 @@ public class StandardEngine extends ContainerBase implements Engine {
     @Override
     public void setParent(Container container) {
 
-        throw new IllegalArgumentException
-                (sm.getString("standardEngine.notParent"));
+        throw new IllegalArgumentException(sm.getString("standardEngine.notParent"));
 
     }
 
@@ -235,12 +232,13 @@ public class StandardEngine extends ContainerBase implements Engine {
      */
     @Override
     protected synchronized void startInternal() throws LifecycleException {
-
         // Log our server identification information
         if (log.isInfoEnabled()) {
             log.info("Starting Servlet Engine: " + ServerInfo.getServerInfo());
         }
         // Standard container startup
+        // 通过Catalina的start方法，启动StandardEngine
+        /****<核心代码 调用了父类的startInternal方法/>***/
         super.startInternal();
     }
 

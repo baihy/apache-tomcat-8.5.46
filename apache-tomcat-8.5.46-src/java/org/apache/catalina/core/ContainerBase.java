@@ -642,8 +642,9 @@ public abstract class ContainerBase extends LifecycleMBeanBase
             }
 
             // Start the new component if necessary
-            if (realm != null)
+            if (realm != null) {
                 realm.setContainer(this);
+            }
             if (getState().isAvailable() && (realm != null) &&
                     (realm instanceof Lifecycle)) {
                 try {
@@ -684,8 +685,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase
     @Override
     public void addChild(Container child) {
         if (Globals.IS_SECURITY_ENABLED) {
-            PrivilegedAction<Void> dp =
-                    new PrivilegedAddChild(child);
+            PrivilegedAction<Void> dp = new PrivilegedAddChild(child);
             AccessController.doPrivileged(dp);
         } else {
             addChildInternal(child);
@@ -693,14 +693,12 @@ public abstract class ContainerBase extends LifecycleMBeanBase
     }
 
     private void addChildInternal(Container child) {
-
-        if (log.isDebugEnabled())
+        if (log.isDebugEnabled()) {
             log.debug("Add child " + child + " " + this);
+        }
         synchronized (children) {
             if (children.get(child.getName()) != null)
-                throw new IllegalArgumentException("addChild:  Child name '" +
-                        child.getName() +
-                        "' is not unique");
+                throw new IllegalArgumentException("addChild:  Child name '" + child.getName() + "' is not unique");
             child.setParent(this);  // May throw IAE
             children.put(child.getName(), child);
         }
@@ -709,9 +707,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase
         // Don't do this inside sync block - start can be a slow process and
         // locking the children object can cause problems elsewhere
         try {
-            if ((getState().isAvailable() ||
-                    LifecycleState.STARTING_PREP.equals(getState())) &&
-                    startChildren) {
+            if ((getState().isAvailable() || LifecycleState.STARTING_PREP.equals(getState())) && startChildren) {
                 child.start();
             }
         } catch (LifecycleException e) {
@@ -782,8 +778,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase
      */
     @Override
     public ContainerListener[] findContainerListeners() {
-        ContainerListener[] results =
-                new ContainerListener[0];
+        ContainerListener[] results = new ContainerListener[0];
         return listeners.toArray(results);
     }
 
@@ -893,7 +888,7 @@ public abstract class ContainerBase extends LifecycleMBeanBase
         }
 
         // Start our child containers, if any
-        // 获取子容器
+        // 获取子容器， 就是获取：engine，host，context等标签的子标签。
         Container children[] = findChildren();
         List<Future<Void>> results = new ArrayList<>();
         for (int i = 0; i < children.length; i++) {
@@ -903,11 +898,12 @@ public abstract class ContainerBase extends LifecycleMBeanBase
             // StartChild是一个实现了Callable接口线程类。
             StartChild startChild = new StartChild(children[i]);
             // 如果是StandardHost的时候，会获取到在Host标签下配置的Context标签，并把Context标签转换成Context对象，调用Context对象的start方法，启动。
+            // 开启多线程启动子节点。且会等待线程结束。
             results.add(startStopExecutor.submit(startChild));
         }
 
         MultiThrowable multiThrowable = null;
-
+        // Future就是JDK有返回值的线程处理方法。
         for (Future<Void> result : results) {
             try {
                 result.get();
@@ -932,7 +928,15 @@ public abstract class ContainerBase extends LifecycleMBeanBase
         }
         // 启动我们的状态
         // host启动的时候，会激发HostConfig监听器
+        /****<通过设置生命周期的状态 触发监听事件/>***/
         setState(LifecycleState.STARTING);
+        /**
+         *  设置启动状态，会激发相应的监听器
+         *  StandardHost       HostConfig
+         *  StandardContext    ContextConfig
+         *  StandardWapper     WapperConfig
+         *  触发的是监听器的org.apache.catalina.startup.HostConfig#lifecycleEvent(org.apache.catalina.LifecycleEvent)方法。
+         */
         // 启动我们的线程
         // Start our thread
         threadStart();

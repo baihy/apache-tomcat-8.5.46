@@ -74,8 +74,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * @author Craig R. McClanahan
  * @author Remy Maucherat
  */
-public class StandardContext extends ContainerBase
-        implements Context, NotificationEmitter {
+public class StandardContext extends ContainerBase implements Context, NotificationEmitter {
 
     private static final Log log = LogFactory.getLog(StandardContext.class);
 
@@ -4841,13 +4840,15 @@ public class StandardContext extends ContainerBase
     @Override
     protected synchronized void startInternal() throws LifecycleException {
 
+        /**
+         * 启动StandardContext对象
+         */
         if(log.isDebugEnabled())
             log.debug("Starting " + getBaseName());
 
         // Send j2ee.state.starting notification
         if (this.getObjectName() != null) {
-            Notification notification = new Notification("j2ee.state.starting",
-                    this.getObjectName(), sequenceNumber.getAndIncrement());
+            Notification notification = new Notification("j2ee.state.starting", this.getObjectName(), sequenceNumber.getAndIncrement());
             broadcaster.sendNotification(notification);
         }
 
@@ -4859,7 +4860,6 @@ public class StandardContext extends ContainerBase
         if (namingResources != null) {
             namingResources.start();
         }
-
         // Post work directory
         // 创建工作目录，就是创建work文件夹
         postWorkDirectory();
