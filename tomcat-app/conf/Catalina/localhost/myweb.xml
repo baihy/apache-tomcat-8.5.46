@@ -5,4 +5,4 @@
     docBase属性指定的路径地址可以是相对路径，特别注意：这个路径相对于catalina-base环境变量下的webapps文件夹的路径
     加上配置的路径
 -->
-<Context docBase="ROOT" reloadable="true"/>
+<Context docBase="" reloadable="true"/>
