@@ -1330,7 +1330,6 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      * @return the Locale to character set mapper for this Context.
      */
     public CharsetMapper getCharsetMapper() {
-
         // Create a mapper the first time it is requested
         if (this.charsetMapper == null) {
             try {
@@ -2398,8 +2397,7 @@ public class StandardContext extends ContainerBase implements Context, Notificat
         WebResourceRoot oldResources = null;
         try {
             if (getState().isAvailable()) {
-                throw new IllegalStateException
-                        (sm.getString("standardContext.resourcesStart"));
+                throw new IllegalStateException(sm.getString("standardContext.resourcesStart"));
             }
 
             oldResources = this.resources;
@@ -2414,8 +2412,7 @@ public class StandardContext extends ContainerBase implements Context, Notificat
                 resources.setContext(this);
             }
 
-            support.firePropertyChange("resources", oldResources,
-                    resources);
+            support.firePropertyChange("resources", oldResources, resources);
         } finally {
             writeLock.unlock();
         }
@@ -4788,6 +4785,7 @@ public class StandardContext extends ContainerBase implements Context, Notificat
         for (int i = 0; i < children.length; i++) {
             Wrapper wrapper = (Wrapper) children[i];
             int loadOnStartup = wrapper.getLoadOnStartup();
+            // 如果loadOnStartup小于0，则不启动Servlet
             if (loadOnStartup < 0)
                 continue;
             Integer key = Integer.valueOf(loadOnStartup);
@@ -4803,10 +4801,10 @@ public class StandardContext extends ContainerBase implements Context, Notificat
         for (ArrayList<Wrapper> list : map.values()) {
             for (Wrapper wrapper : list) {
                 try {
+                    //  加载需要在容器初始化时，需要初始化的Servlet
                     wrapper.load();
                 } catch (ServletException e) {
-                    getLogger().error(sm.getString("standardContext.loadOnStartup.loadException",
-                            getName(), wrapper.getName()), StandardWrapper.getRootCause(e));
+                    getLogger().error(sm.getString("standardContext.loadOnStartup.loadException", getName(), wrapper.getName()), StandardWrapper.getRootCause(e));
                     // NOTE: load errors (including a servlet that throws
                     // UnavailableException from the init() method) are NOT
                     // fatal to application startup
@@ -4856,10 +4854,21 @@ public class StandardContext extends ContainerBase implements Context, Notificat
         // 创建工作目录，就是创建conf/work文件夹
         postWorkDirectory();
         // Add missing components as necessary
+        // 部署项目的方式有三种：1.在webapps文件夹下，通过文件夹部署。2.在config/Catalina/localhost下存放的xml文件。3.在webapps文件夹下，通过war包部署。
+        /**
+         * WebResourceRoot接口是：tomcat8.0以后
+         *   什么是资源？
+         *      资源就是实实在在存在各种文件
+         *   WebResourceRoot的资源类型有：
+         *
+         *
+         */
+
         if (getResources() == null) {   // (1) Required by Loader
             if (log.isDebugEnabled())
                 log.debug("Configuring default Resources");
             try {
+                new StandardRoot(this);
                 setResources(new StandardRoot(this));
             } catch (IllegalArgumentException e) {
                 log.error(sm.getString("standardContext.resourcesInit"), e);
@@ -4872,7 +4881,7 @@ public class StandardContext extends ContainerBase implements Context, Notificat
         }
 
         if (getLoader() == null) {
-            // 加载应用的
+            // 设置WepapLoader。主要是用来加载当前的app的
             WebappLoader webappLoader = new WebappLoader(getParentClassLoader());
             webappLoader.setDelegate(getDelegate());
             setLoader(webappLoader);
@@ -4902,6 +4911,7 @@ public class StandardContext extends ContainerBase implements Context, Notificat
             ok = false;
         }
 
+        // 读取catalina.useNaming环境变量
         // Reading the "catalina.useNaming" environment variable
         String useNamingProperty = System.getProperty("catalina.useNaming");
         if ((useNamingProperty != null)
@@ -4930,6 +4940,7 @@ public class StandardContext extends ContainerBase implements Context, Notificat
         try {
             if (ok) {
                 // Start our subordinate components, if any
+                // 获取类加载器
                 Loader loader = getLoader();
                 if (loader instanceof Lifecycle) {
                     ((Lifecycle) loader).start();
@@ -4937,8 +4948,8 @@ public class StandardContext extends ContainerBase implements Context, Notificat
 
                 // since the loader just started, the webapp classloader is now
                 // created.
-                setClassLoaderProperty("clearReferencesRmiTargets",
-                        getClearReferencesRmiTargets());
+                // 设置类加载器的属性
+                setClassLoaderProperty("clearReferencesRmiTargets", getClearReferencesRmiTargets());
                 setClassLoaderProperty("clearReferencesStopThreads",
                         getClearReferencesStopThreads());
                 setClassLoaderProperty("clearReferencesStopTimerThreads",
@@ -4959,7 +4970,7 @@ public class StandardContext extends ContainerBase implements Context, Notificat
                 // too early, so it should be reset.
                 logger = null;
                 getLogger();
-
+                // 设置Realm域
                 Realm realm = getRealmInternal();
                 if (null != realm) {
                     if (realm instanceof Lifecycle) {
@@ -4984,7 +4995,7 @@ public class StandardContext extends ContainerBase implements Context, Notificat
                 }
 
                 // Notify our interested LifecycleListeners
-                // 触发ContextConfig
+                // 发出了一个配置事件(configure_start),这个事件会触发ContextConfig的运行
                 fireLifecycleEvent(Lifecycle.CONFIGURE_START_EVENT, null);
 
                 // Start our child containers, if not already started
@@ -5121,6 +5132,7 @@ public class StandardContext extends ContainerBase implements Context, Notificat
 
             // Load and initialize all "load on startup" servlets
             if (ok) {
+                // 这是加载所有需要初始化容器需要初始化的Servlet，即配置load-on-startup > 0的Servlet
                 if (!loadOnStartup(findChildren())) {
                     log.error(sm.getString("standardContext.servletFail"));
                     ok = false;

@@ -230,7 +230,10 @@ public class ContextConfig implements LifecycleListener {
      */
     @Override
     public void lifecycleEvent(LifecycleEvent event) {
-
+        /**
+         * 这个方法的核心功能就是解析web.xml文件，或Servlet相关的注解。
+         */
+        //org.apache.catalina.core.StandardContext.startInternal在这个方法中触发事件，调用这个方法。
         // Identify the context we are associated with
         try {
             context = (Context) event.getLifecycle();
@@ -238,9 +241,9 @@ public class ContextConfig implements LifecycleListener {
             log.error(sm.getString("contextConfig.cce", event.getLifecycle()), e);
             return;
         }
-
         // Process the event that has occurred
         if (event.getType().equals(Lifecycle.CONFIGURE_START_EVENT)) {
+            // 处理配置启动事件
             configureStart();
         } else if (event.getType().equals(Lifecycle.BEFORE_START_EVENT)) {
             beforeStart();
@@ -702,6 +705,8 @@ public class ContextConfig implements LifecycleListener {
      * Process a "contextConfig" event for this Context.
      */
     protected synchronized void configureStart() {
+
+        // 处理配置启动
         // Called from StandardContext.start()
 
         if (log.isDebugEnabled()) {
@@ -709,12 +714,9 @@ public class ContextConfig implements LifecycleListener {
         }
 
         if (log.isDebugEnabled()) {
-            log.debug(sm.getString("contextConfig.xmlSettings",
-                    context.getName(),
-                    Boolean.valueOf(context.getXmlValidation()),
-                    Boolean.valueOf(context.getXmlNamespaceAware())));
+            log.debug(sm.getString("contextConfig.xmlSettings", context.getName(), Boolean.valueOf(context.getXmlValidation()), Boolean.valueOf(context.getXmlNamespaceAware())));
         }
-
+        // 解析项目中web.xml文件
         webConfig();
         /**
          * 我们直接启动org.apache.catalina.startup.Bootstrap的时候没有加载org.apache.jasper.servlet.JasperInitializer，从而无法编译JSP。
@@ -1026,6 +1028,9 @@ public class ContextConfig implements LifecycleListener {
      * web.xml file.
      */
     protected void webConfig() {
+
+        /*****<核心代码 解析web.xml/>*********/
+
         /*
          * Anything and everything can override the global and host defaults.
          * This is implemented in two parts
@@ -1051,12 +1056,15 @@ public class ContextConfig implements LifecycleListener {
          *   those in JARs excluded from an absolute ordering) need to be
          *   scanned to check if they match.
          */
-        WebXmlParser webXmlParser = new WebXmlParser(context.getXmlNamespaceAware(),
-                context.getXmlValidation(), context.getXmlBlockExternal());
-
+        // 对web.xml文件进行解析
+        // 注意：Servlet在3.0之前，所有的Servlet都必须要配置到web.xml中。
+        // 实例化一个web.xml的解析器
+        WebXmlParser webXmlParser = new WebXmlParser(context.getXmlNamespaceAware(), context.getXmlValidation(), context.getXmlBlockExternal());
         Set<WebXml> defaults = new HashSet<>();
-        defaults.add(getDefaultWebXmlFragment(webXmlParser));
-
+        // 获取catalina-base/conf/web.xml文件
+        WebXml defaultWebXml = getDefaultWebXmlFragment(webXmlParser);
+        defaults.add(defaultWebXml);
+        //创建WebXml对象，对应web.xml的解析结果
         WebXml webXml = createWebXml();
 
         // Parse context level web.xml
@@ -1077,16 +1085,17 @@ public class ContextConfig implements LifecycleListener {
 
         // Step 2. Order the fragments.
         Set<WebXml> orderedFragments = null;
-        orderedFragments =
-                WebXml.orderWebFragments(webXml, fragments, sContext);
+        orderedFragments = WebXml.orderWebFragments(webXml, fragments, sContext);
 
         // Step 3. Look for ServletContainerInitializer implementations
         if (ok) {
+            // 对Servlet容器进行初始化
             processServletContainerInitializers();
         }
 
         if (!webXml.isMetadataComplete() || typeInitializerMap.size() > 0) {
             // Steps 4 & 5.
+            // 加载/WEB-INF/classes下的资源，在加载的过程中会处理@WebServlet，@WebFilter，@WebListener注解的类
             processClasses(webXml, orderedFragments);
         }
 
@@ -1109,11 +1118,14 @@ public class ContextConfig implements LifecycleListener {
 
             // Step 9. Apply merged web.xml to Context
             if (ok) {
+                // 根据web.xml文件的解析结果，配置Context对象
                 configureContext(webXml);
             }
         } else {
+            // 把配置的默认的web.xml项目的web.xml文件，进行合并
             webXml.merge(defaults);
             convertJsps(webXml);
+            // 根据web.xml文件的解析结果，配置Context对象
             configureContext(webXml);
         }
 
@@ -1164,17 +1176,15 @@ public class ContextConfig implements LifecycleListener {
         Map<String, JavaClassCacheEntry> javaClassCache = new HashMap<>();
 
         if (ok) {
-            WebResource[] webResources =
-                    context.getResources().listResources("/WEB-INF/classes");
-
+            WebResource[] webResources = context.getResources().listResources("/WEB-INF/classes");
             for (WebResource webResource : webResources) {
                 // Skip the META-INF directory from any JARs that have been
                 // expanded in to WEB-INF/classes (sometimes IDEs do this).
                 if ("META-INF".equals(webResource.getName())) {
                     continue;
                 }
-                processAnnotationsWebResource(webResource, webXml,
-                        webXml.isMetadataComplete(), javaClassCache);
+                //获取到/WEB-INF/classes下的资源，解析出：WebServlet，WebFilter，WebListener加了这个三个注解其中之一的类
+                processAnnotationsWebResource(webResource, webXml, webXml.isMetadataComplete(), javaClassCache);
             }
         }
 
@@ -1183,8 +1193,8 @@ public class ContextConfig implements LifecycleListener {
         // are going to use (remember orderedFragments includes any
         // container fragments)
         if (ok) {
-            processAnnotations(
-                    orderedFragments, webXml.isMetadataComplete(), javaClassCache);
+            // 处理注解默认的xml
+            processAnnotations(orderedFragments, webXml.isMetadataComplete(), javaClassCache);
         }
 
         // Cache, if used, is no longer required so clear it
@@ -1205,8 +1215,7 @@ public class ContextConfig implements LifecycleListener {
         for (Entry<String, String> entry : webxml.getContextParams().entrySet()) {
             context.addParameter(entry.getKey(), entry.getValue());
         }
-        context.setDenyUncoveredHttpMethods(
-                webxml.getDenyUncoveredHttpMethods());
+        context.setDenyUncoveredHttpMethods(webxml.getDenyUncoveredHttpMethods());
         context.setDisplayName(webxml.getDisplayName());
         context.setDistributable(webxml.isDistributable());
         for (ContextLocalEjb ejbLocalRef : webxml.getEjbLocalRefs().values()) {
@@ -1218,46 +1227,45 @@ public class ContextConfig implements LifecycleListener {
         for (ContextEnvironment environment : webxml.getEnvEntries().values()) {
             context.getNamingResources().addEnvironment(environment);
         }
+        // 设置错误页面
         for (ErrorPage errorPage : webxml.getErrorPages().values()) {
             context.addErrorPage(errorPage);
         }
+        //设置filter
         for (FilterDef filter : webxml.getFilters().values()) {
             if (filter.getAsyncSupported() == null) {
                 filter.setAsyncSupported("false");
             }
             context.addFilterDef(filter);
         }
+        // 设置filter的映射
         for (FilterMap filterMap : webxml.getFilterMappings()) {
             context.addFilterMap(filterMap);
         }
         context.setJspConfigDescriptor(webxml.getJspConfigDescriptor());
+        // 设置监听器
         for (String listener : webxml.getListeners()) {
             context.addApplicationListener(listener);
         }
-        for (Entry<String, String> entry :
-                webxml.getLocaleEncodingMappings().entrySet()) {
-            context.addLocaleEncodingMappingParameter(entry.getKey(),
-                    entry.getValue());
+        for (Entry<String, String> entry : webxml.getLocaleEncodingMappings().entrySet()) {
+            context.addLocaleEncodingMappingParameter(entry.getKey(), entry.getValue());
         }
         // Prevents IAE
         if (webxml.getLoginConfig() != null) {
             context.setLoginConfig(webxml.getLoginConfig());
         }
-        for (MessageDestinationRef mdr :
-                webxml.getMessageDestinationRefs().values()) {
+        for (MessageDestinationRef mdr : webxml.getMessageDestinationRefs().values()) {
             context.getNamingResources().addMessageDestinationRef(mdr);
         }
 
         // messageDestinations were ignored in Tomcat 6, so ignore here
 
         context.setIgnoreAnnotations(webxml.isMetadataComplete());
-        for (Entry<String, String> entry :
-                webxml.getMimeMappings().entrySet()) {
+        for (Entry<String, String> entry : webxml.getMimeMappings().entrySet()) {
             context.addMimeMapping(entry.getKey(), entry.getValue());
         }
         // Name is just used for ordering
-        for (ContextResourceEnvRef resource :
-                webxml.getResourceEnvRefs().values()) {
+        for (ContextResourceEnvRef resource : webxml.getResourceEnvRefs().values()) {
             context.getNamingResources().addResourceEnvRef(resource);
         }
         for (ContextResource resource : webxml.getResourceRefs().values()) {
@@ -1278,6 +1286,7 @@ public class ContextConfig implements LifecycleListener {
         for (ContextService service : webxml.getServiceRefs().values()) {
             context.getNamingResources().addService(service);
         }
+        // 设置Servlet
         for (ServletDef servlet : webxml.getServlets().values()) {
             Wrapper wrapper = context.createWrapper();
             // Description is ignored
@@ -1287,12 +1296,14 @@ public class ContextConfig implements LifecycleListener {
             // jsp-file gets passed to the JSP Servlet as an init-param
 
             if (servlet.getLoadOnStartup() != null) {
+                // 设置Servlet的启动
                 wrapper.setLoadOnStartup(servlet.getLoadOnStartup().intValue());
             }
             if (servlet.getEnabled() != null) {
                 wrapper.setEnabled(servlet.getEnabled().booleanValue());
             }
             wrapper.setName(servlet.getServletName());
+            // 获取到Servlet的参数
             Map<String, String> params = servlet.getParameterMap();
             for (Entry<String, String> entry : params.entrySet()) {
                 wrapper.addInitParameter(entry.getKey(), entry.getValue());
@@ -1300,8 +1311,7 @@ public class ContextConfig implements LifecycleListener {
             wrapper.setRunAs(servlet.getRunAs());
             Set<SecurityRoleRef> roleRefs = servlet.getSecurityRoleRefs();
             for (SecurityRoleRef roleRef : roleRefs) {
-                wrapper.addSecurityReference(
-                        roleRef.getName(), roleRef.getLink());
+                wrapper.addSecurityReference(roleRef.getName(), roleRef.getLink());
             }
             wrapper.setServletClass(servlet.getServletClass());
             MultipartDef multipartdef = servlet.getMultipartDef();
@@ -1325,20 +1335,20 @@ public class ContextConfig implements LifecycleListener {
                         servlet.getAsyncSupported().booleanValue());
             }
             wrapper.setOverridable(servlet.isOverridable());
+            // 把Servlet对应的Wrapper对象，放到Context对象的子节点
             context.addChild(wrapper);
         }
-        for (Entry<String, String> entry :
-                webxml.getServletMappings().entrySet()) {
+        for (Entry<String, String> entry : webxml.getServletMappings().entrySet()) {
             context.addServletMappingDecoded(entry.getKey(), entry.getValue());
         }
+        // 配置Session
         SessionConfig sessionConfig = webxml.getSessionConfig();
         if (sessionConfig != null) {
             if (sessionConfig.getSessionTimeout() != null) {
-                context.setSessionTimeout(
-                        sessionConfig.getSessionTimeout().intValue());
+                // 设置Session超时的时间
+                context.setSessionTimeout(sessionConfig.getSessionTimeout().intValue());
             }
-            SessionCookieConfig scc =
-                    context.getServletContext().getSessionCookieConfig();
+            SessionCookieConfig scc = context.getServletContext().getSessionCookieConfig();
             scc.setName(sessionConfig.getCookieName());
             scc.setDomain(sessionConfig.getCookieDomain());
             scc.setPath(sessionConfig.getCookiePath());
@@ -1359,7 +1369,7 @@ public class ContextConfig implements LifecycleListener {
         }
 
         // Context doesn't use version directly
-
+        // 设置欢迎页面
         for (String welcomeFile : webxml.getWelcomeFiles()) {
             /*
              * The following will result in a welcome file of "" so don't add
@@ -1374,8 +1384,7 @@ public class ContextConfig implements LifecycleListener {
         }
 
         // Do this last as it depends on servlets
-        for (JspPropertyGroup jspPropertyGroup :
-                webxml.getJspPropertyGroups()) {
+        for (JspPropertyGroup jspPropertyGroup : webxml.getJspPropertyGroups()) {
             String jspServletName = context.findServletMapping("*.jsp");
             if (jspServletName == null) {
                 jspServletName = "jsp";
@@ -1387,15 +1396,13 @@ public class ContextConfig implements LifecycleListener {
             } else {
                 if (log.isDebugEnabled()) {
                     for (String urlPattern : jspPropertyGroup.getUrlPatterns()) {
-                        log.debug("Skipping " + urlPattern + " , no servlet " +
-                                jspServletName);
+                        log.debug("Skipping " + urlPattern + " , no servlet " + jspServletName);
                     }
                 }
             }
         }
 
-        for (Entry<String, String> entry :
-                webxml.getPostConstructMethods().entrySet()) {
+        for (Entry<String, String> entry : webxml.getPostConstructMethods().entrySet()) {
             context.addPostConstructMethod(entry.getKey(), entry.getValue());
         }
 
@@ -1688,6 +1695,7 @@ public class ContextConfig implements LifecycleListener {
         }
         // Set the default if we don't have any overrides
         if (defaultWebXml == null) {
+            // 获取的是"conf/web.xml"文件
             getDefaultWebXml();
         }
 
@@ -1695,8 +1703,8 @@ public class ContextConfig implements LifecycleListener {
         if (Constants.NoDefaultWebXml.equals(defaultWebXml)) {
             return null;
         }
-        return getWebXmlSource(defaultWebXml,
-                context.getCatalinaBase().getPath());
+        //  根据catalina—base的路径和文件名，获取conf文件夹下的web.xml文件
+        return getWebXmlSource(defaultWebXml, context.getCatalinaBase().getPath());
     }
 
     /**
@@ -1852,11 +1860,9 @@ public class ContextConfig implements LifecycleListener {
             // validation is not enabled
             parseRequired = false;
         }
-        FragmentJarScannerCallback callback =
-                new FragmentJarScannerCallback(webXmlParser, delegate, parseRequired);
+        FragmentJarScannerCallback callback = new FragmentJarScannerCallback(webXmlParser, delegate, parseRequired);
 
-        jarScanner.scan(JarScanType.PLUGGABILITY,
-                context.getServletContext(), callback);
+        jarScanner.scan(JarScanType.PLUGGABILITY, context.getServletContext(), callback);
 
         if (!callback.isOk()) {
             ok = false;
@@ -1864,8 +1870,7 @@ public class ContextConfig implements LifecycleListener {
         return callback.getFragments();
     }
 
-    protected void processAnnotations(Set<WebXml> fragments,
-                                      boolean handlesTypesOnly, Map<String, JavaClassCacheEntry> javaClassCache) {
+    protected void processAnnotations(Set<WebXml> fragments, boolean handlesTypesOnly, Map<String, JavaClassCacheEntry> javaClassCache) {
         for (WebXml fragment : fragments) {
             // Only need to scan for @HandlesTypes matches if any of the
             // following are true:
@@ -1873,9 +1878,8 @@ public class ContextConfig implements LifecycleListener {
             //   (e.g. main web.xml has metadata-complete="true"
             // - this fragment is for a container JAR (Servlet 3.1 section 8.1)
             // - this fragment has metadata-complete="true"
-            boolean htOnly = handlesTypesOnly || !fragment.getWebappJar() ||
-                    fragment.isMetadataComplete();
-
+            boolean htOnly = handlesTypesOnly || !fragment.getWebappJar() || fragment.isMetadataComplete();
+            // 实例化一个WebXml对象
             WebXml annotations = new WebXml();
             // no impact on distributable
             annotations.setDistributable(true);
@@ -1893,14 +1897,10 @@ public class ContextConfig implements LifecycleListener {
                                                  Map<String, JavaClassCacheEntry> javaClassCache) {
 
         if (webResource.isDirectory()) {
-            WebResource[] webResources =
-                    webResource.getWebResourceRoot().listResources(
-                            webResource.getWebappPath());
+            WebResource[] webResources = webResource.getWebResourceRoot().listResources(webResource.getWebappPath());
             if (webResources.length > 0) {
                 if (log.isDebugEnabled()) {
-                    log.debug(sm.getString(
-                            "contextConfig.processAnnotationsWebDir.debug",
-                            webResource.getURL()));
+                    log.debug(sm.getString("contextConfig.processAnnotationsWebDir.debug", webResource.getURL()));
                 }
                 for (WebResource r : webResources) {
                     processAnnotationsWebResource(r, fragment, handlesTypesOnly, javaClassCache);
@@ -2005,18 +2005,18 @@ public class ContextConfig implements LifecycleListener {
     }
 
 
-    protected void processAnnotationsStream(InputStream is, WebXml fragment,
-                                            boolean handlesTypesOnly, Map<String, JavaClassCacheEntry> javaClassCache)
-            throws ClassFormatException, IOException {
-
+    /**
+     * 核心代码：
+     */
+    protected void processAnnotationsStream(InputStream is, WebXml fragment, boolean handlesTypesOnly, Map<String, JavaClassCacheEntry> javaClassCache) throws ClassFormatException, IOException {
+        // 实例化了一个Class文件解析器，和类加载器不一样。这里是通过IO流，把Class文件读取到内存中
         ClassParser parser = new ClassParser(is);
+        // 这里是解析class文件。
         JavaClass clazz = parser.parse();
         checkHandlesTypes(clazz, javaClassCache);
-
         if (handlesTypesOnly) {
             return;
         }
-
         processClass(fragment, clazz);
     }
 

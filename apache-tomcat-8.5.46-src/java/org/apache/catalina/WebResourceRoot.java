@@ -83,6 +83,16 @@ import java.util.Set;
  *   a higher priority ResourceSet that is read-write
  */
 public interface WebResourceRoot extends Lifecycle {
+
+    /**
+     * WebResourceRoot的资源类型有：
+     *  pre资源，在context.xml中，通过<PreResource></PreResource>来进行配置
+     *  main资源：WEB-INF文件夹的classes和lib文件夹下的资源
+     *  jar：<jarResource></jarResource>
+     *  post:<PostResource></PostResource>
+     */
+
+
     /**
      * Obtain the object that represents the resource at the given path. Note
      * that the resource at that path may not exist. If the path does not

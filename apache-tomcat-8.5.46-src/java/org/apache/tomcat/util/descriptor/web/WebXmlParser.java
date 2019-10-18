@@ -16,9 +16,6 @@
  */
 package org.apache.tomcat.util.descriptor.web;
 
-import java.io.IOException;
-import java.net.URL;
-
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.descriptor.DigesterFactory;
@@ -28,6 +25,9 @@ import org.apache.tomcat.util.digester.Digester;
 import org.apache.tomcat.util.res.StringManager;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXParseException;
+
+import java.io.IOException;
+import java.net.URL;
 
 public class WebXmlParser {
 
@@ -54,11 +54,9 @@ public class WebXmlParser {
     private final WebRuleSet webFragmentRuleSet;
 
 
-    public WebXmlParser(boolean namespaceAware, boolean validation,
-            boolean blockExternal) {
+    public WebXmlParser(boolean namespaceAware, boolean validation, boolean blockExternal) {
         webRuleSet = new WebRuleSet(false);
-        webDigester = DigesterFactory.newDigester(validation,
-                namespaceAware, webRuleSet, blockExternal);
+        webDigester = DigesterFactory.newDigester(validation, namespaceAware, webRuleSet, blockExternal);
         webDigester.getParser();
 
         webFragmentRuleSet = new WebRuleSet(true);
@@ -86,8 +84,7 @@ public class WebXmlParser {
     }
 
 
-    public boolean parseWebXml(InputSource source, WebXml dest,
-            boolean fragment) {
+    public boolean parseWebXml(InputSource source, WebXml dest, boolean fragment) {
 
         boolean ok = true;
 
@@ -131,8 +128,7 @@ public class WebXmlParser {
                              "" + e.getColumnNumber()));
             ok = false;
         } catch (Exception e) {
-            log.error(sm.getString("webXmlParser.applicationParse",
-                    source.getSystemId()), e);
+            log.error(sm.getString("webXmlParser.applicationParse", source.getSystemId()), e);
             ok = false;
         } finally {
             InputSourceUtil.close(source);

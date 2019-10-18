@@ -16,29 +16,6 @@
  */
 package org.apache.tomcat.util.descriptor.web;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
-import javax.servlet.DispatcherType;
-import javax.servlet.ServletContext;
-import javax.servlet.SessionTrackingMode;
-import javax.servlet.descriptor.JspConfigDescriptor;
-import javax.servlet.descriptor.JspPropertyGroupDescriptor;
-import javax.servlet.descriptor.TaglibDescriptor;
-
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import org.apache.tomcat.util.buf.UDecoder;
@@ -46,6 +23,18 @@ import org.apache.tomcat.util.descriptor.XmlIdentifiers;
 import org.apache.tomcat.util.digester.DocumentProperties;
 import org.apache.tomcat.util.res.StringManager;
 import org.apache.tomcat.util.security.Escape;
+
+import javax.servlet.DispatcherType;
+import javax.servlet.ServletContext;
+import javax.servlet.SessionTrackingMode;
+import javax.servlet.descriptor.JspConfigDescriptor;
+import javax.servlet.descriptor.JspPropertyGroupDescriptor;
+import javax.servlet.descriptor.TaglibDescriptor;
+import java.io.UnsupportedEncodingException;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.util.*;
+import java.util.Map.Entry;
 
 /**
  * Representation of common elements of web.xml and web-fragment.xml. Provides
@@ -56,11 +45,9 @@ import org.apache.tomcat.util.security.Escape;
  * StandardContext will check validity of values (eg URL formats etc)
  */
 @SuppressWarnings("deprecation")
-public class WebXml extends XmlEncodingBase implements DocumentProperties.Encoding,
-        DocumentProperties.Charset {
+public class WebXml extends XmlEncodingBase implements DocumentProperties.Encoding, DocumentProperties.Charset {
 
-    protected static final String ORDER_OTHERS =
-        "org.apache.catalina.order.others";
+    protected static final String ORDER_OTHERS = "org.apache.catalina.order.others";
 
     private static final StringManager sm =
         StringManager.getManager(Constants.PACKAGE_NAME);
@@ -314,6 +301,7 @@ public class WebXml extends XmlEncodingBase implements DocumentProperties.Encodi
     // TODO: icon (multiple) is ignored
     // TODO: init-param/description (multiple with language) is ignored
     // TODO: security-role-ref/description (multiple with language) is ignored
+    // servlets 这个集合是存放所有的jsp和Servlet类的
     private final Map<String,ServletDef> servlets = new HashMap<>();
     public void addServlet(ServletDef servletDef) {
         servlets.put(servletDef.getServletName(), servletDef);
