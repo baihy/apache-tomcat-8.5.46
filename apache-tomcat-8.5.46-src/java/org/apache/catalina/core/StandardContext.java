@@ -4796,7 +4796,8 @@ public class StandardContext extends ContainerBase implements Context, Notificat
             }
             list.add(wrapper);
         }
-
+        // 注意：loadOnStartup当配置成大于等于0的时候，会在服务器启动的时候，初始化的Servlet，但还是需要注意，loadOnStartup配置了优先级，值越优先级就越大。0是最高优先级。
+        // 当小于0的时候，是在Servlet第一次被访问的时候，才会实例化
         // Load the collected "load on startup" servlets
         for (ArrayList<Wrapper> list : map.values()) {
             for (Wrapper wrapper : list) {
@@ -5035,8 +5036,7 @@ public class StandardContext extends ContainerBase implements Context, Notificat
                 // Configure default manager if none was specified
                 if (contextManager != null) {
                     if (log.isDebugEnabled()) {
-                        log.debug(sm.getString("standardContext.manager",
-                                contextManager.getClass().getName()));
+                        log.debug(sm.getString("standardContext.manager", contextManager.getClass().getName()));
                     }
                     setManager(contextManager);
                 }
@@ -5055,8 +5055,7 @@ public class StandardContext extends ContainerBase implements Context, Notificat
 
             // We put the resources into the servlet context
             if (ok)
-                getServletContext().setAttribute
-                        (Globals.RESOURCES_ATTR, getResources());
+                getServletContext().setAttribute(Globals.RESOURCES_ATTR, getResources());
 
             if (ok) {
                 if (getInstanceManager() == null) {
@@ -5076,8 +5075,7 @@ public class StandardContext extends ContainerBase implements Context, Notificat
 
             // Create context attributes that will be required
             if (ok) {
-                getServletContext().setAttribute(
-                        JarScanner.class.getName(), getJarScanner());
+                getServletContext().setAttribute(JarScanner.class.getName(), getJarScanner());
             }
 
             // Set up the context init params
@@ -5087,8 +5085,8 @@ public class StandardContext extends ContainerBase implements Context, Notificat
             for (Map.Entry<ServletContainerInitializer, Set<Class<?>>> entry :
                     initializers.entrySet()) {
                 try {
-                    entry.getKey().onStartup(entry.getValue(),
-                            getServletContext());
+                    // 初始化Servlet对象
+                    entry.getKey().onStartup(entry.getValue(), getServletContext());
                 } catch (ServletException e) {
                     log.error(sm.getString("standardContext.sciFail"), e);
                     ok = false;

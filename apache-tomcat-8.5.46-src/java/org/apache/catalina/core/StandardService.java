@@ -443,8 +443,7 @@ public class StandardService extends LifecycleMBeanBase implements Service {
                     }
                 } catch (Exception e) {
                     log.error(sm.getString(
-                            "standardService.connector.startFailed",
-                            connector), e);
+                            "standardService.connector.startFailed", connector), e);
                 }
             }
         }

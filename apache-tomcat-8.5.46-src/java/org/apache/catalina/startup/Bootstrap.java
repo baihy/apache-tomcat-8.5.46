@@ -305,6 +305,8 @@ public final class Bootstrap {
             param[0] = arguments;
         }
         // 调用catalina的load方法
+        //catalinaDaemon这个对象就是在调用init方法的时候，初始化的Catalina对象
+        // 这里通过发反射调用Catalina的load方法
         Method method = catalinaDaemon.getClass().getMethod(methodName, paramTypes);
         if (log.isDebugEnabled()) {
             log.debug("Calling startup class " + method);

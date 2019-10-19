@@ -748,6 +748,7 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
     @Override
     protected void startInternal() throws LifecycleException {
         // server启动的核心方法
+        // 触发：configure_start事件，此时触发的是org.apache.catalina.core.NamingContextListener.lifecycleEvent
         fireLifecycleEvent(CONFIGURE_START_EVENT, null);
         setState(LifecycleState.STARTING);
 
@@ -841,6 +842,7 @@ public final class StandardServer extends LifecycleMBeanBase implements Server {
         // Initialize our defined Services
         // 初始化Service，这里是循环出来的，所以，一个Server标签可以多个Service标签。
         for (int i = 0; i < services.length; i++) {
+            // 调用Service的init方法
             services[i].init();
         }
     }

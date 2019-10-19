@@ -949,6 +949,8 @@ public class StandardWrapper extends ContainerBase implements ServletConfig, Wra
      */
     @Override
     public synchronized void load() throws ServletException {
+
+        // 实例化Servlet对象，通过反射调用的过程中， 还会调用Servlet的initService方法，对Servlet进行初始化
         instance = loadServlet();
 
         if (!instanceInitialized) {
@@ -1003,18 +1005,16 @@ public class StandardWrapper extends ContainerBase implements ServletConfig, Wra
             // Complain if no servlet class has been specified
             if (servletClass == null) {
                 unavailable(null);
-                throw new ServletException
-                        (sm.getString("standardWrapper.notClass", getName()));
+                throw new ServletException(sm.getString("standardWrapper.notClass", getName()));
             }
-
+            // Servlet中，Servlet，Filter，Listener三个组件的管理器
             InstanceManager instanceManager = ((StandardContext) getParent()).getInstanceManager();
             try {
                 servlet = (Servlet) instanceManager.newInstance(servletClass);
             } catch (ClassCastException e) {
                 unavailable(null);
                 // Restore the context ClassLoader
-                throw new ServletException
-                        (sm.getString("standardWrapper.notServlet", servletClass), e);
+                throw new ServletException(sm.getString("standardWrapper.notServlet", servletClass), e);
             } catch (Throwable e) {
                 e = ExceptionUtils.unwrapInvocationTargetException(e);
                 ExceptionUtils.handleThrowable(e);
@@ -1048,18 +1048,17 @@ public class StandardWrapper extends ContainerBase implements ServletConfig, Wra
             }
 
             classLoadTime = (int) (System.currentTimeMillis() - t1);
-
+            // Servlet的单线程模式，已经废弃
             if (servlet instanceof SingleThreadModel) {
                 if (instancePool == null) {
                     instancePool = new Stack<>();
                 }
                 singleThreadModel = true;
             }
-
+            // 调用Servlet的初始化方法
             initServlet(servlet);
-
+            // 发布load事件。
             fireContainerEvent("load", this);
-
             loadTime = System.currentTimeMillis() - t1;
         } finally {
             if (swallowOutput) {
@@ -1086,8 +1085,7 @@ public class StandardWrapper extends ContainerBase implements ServletConfig, Wra
     }
 
 
-    private synchronized void initServlet(Servlet servlet)
-            throws ServletException {
+    private synchronized void initServlet(Servlet servlet) throws ServletException {
 
         if (instanceInitialized && !singleThreadModel) return;
 
@@ -1109,6 +1107,7 @@ public class StandardWrapper extends ContainerBase implements ServletConfig, Wra
                     }
                 }
             } else {
+                // 调用的Servlet的init方法
                 servlet.init(facade);
             }
 
@@ -1556,9 +1555,7 @@ public class StandardWrapper extends ContainerBase implements ServletConfig, Wra
         setAvailable(0L);
         // Send j2ee.state.running notification
         if (this.getObjectName() != null) {
-            Notification notification =
-                    new Notification("j2ee.state.running", this.getObjectName(),
-                            sequenceNumber++);
+            Notification notification = new Notification("j2ee.state.running", this.getObjectName(), sequenceNumber++);
             broadcaster.sendNotification(notification);
         }
 

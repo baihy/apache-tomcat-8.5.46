@@ -1162,8 +1162,7 @@ public class ContextConfig implements LifecycleListener {
                     context.addServletContainerInitializer(
                             entry.getKey(), null);
                 } else {
-                    context.addServletContainerInitializer(
-                            entry.getKey(), entry.getValue());
+                    context.addServletContainerInitializer(entry.getKey(), entry.getValue());
                 }
             }
         }

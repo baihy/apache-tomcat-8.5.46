@@ -275,6 +275,7 @@ public class HostConfig implements LifecycleListener {
             return;
         }
         // Process the event that has occurred
+        // 根据触发事件不同，启动调用不同的方法
         if (event.getType().equals(Lifecycle.PERIODIC_EVENT)) {
             check();
         } else if (event.getType().equals(Lifecycle.BEFORE_START_EVENT)) {
