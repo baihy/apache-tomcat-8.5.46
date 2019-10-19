@@ -715,11 +715,10 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
             }
 
             S socket = wrapper.getSocket();
-
+            // 获取socket的处理器org.apache.coyote.http11.Http11Processor
             Processor processor = connections.get(socket);
             if (getLog().isDebugEnabled()) {
-                getLog().debug(sm.getString("abstractConnectionHandler.connectionsGet",
-                        processor, socket));
+                getLog().debug(sm.getString("abstractConnectionHandler.connectionsGet", processor, socket));
             }
 
             // Timeouts are calculated on a dedicated thread and then
@@ -792,18 +791,19 @@ public abstract class AbstractProtocol<S> implements ProtocolHandler,
                     }
                 }
                 if (processor == null) {
+                    // 构建Http11Processor对象
                     processor = getProtocol().createProcessor();
                     register(processor);
                 }
 
-                processor.setSslSupport(
-                        wrapper.getSslSupport(getProtocol().getClientCertProvider()));
+                processor.setSslSupport(wrapper.getSslSupport(getProtocol().getClientCertProvider()));
 
                 // Associate the processor with the connection
                 connections.put(socket, processor);
 
                 SocketState state = SocketState.CLOSED;
                 do {
+                    /****<核心代码 调用org.apache.coyote.http11.Http11Processor的process方法，处理业务逻辑/>****/
                     state = processor.process(wrapper, status);
 
                     if (state == SocketState.UPGRADING) {

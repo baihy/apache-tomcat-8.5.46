@@ -68,8 +68,7 @@ public abstract class AbstractEndpoint<S> {
          * @param status The current socket status
          * @return The state of the socket after processing
          */
-        public SocketState process(SocketWrapperBase<S> socket,
-                                   SocketEvent status);
+        public SocketState process(SocketWrapperBase<S> socket, SocketEvent status);
 
 
         /**
@@ -1179,22 +1178,28 @@ public abstract class AbstractEndpoint<S> {
      *                      container thread
      * @return if processing was triggered successfully
      */
-    public boolean processSocket(SocketWrapperBase<S> socketWrapper,
-                                 SocketEvent event, boolean dispatch) {
+    public boolean processSocket(SocketWrapperBase<S> socketWrapper, SocketEvent event, boolean dispatch) {
         try {
             if (socketWrapper == null) {
                 return false;
             }
+            // 从同步栈（SynchronizedStack）中获取一个SocketProcessorBase对象
             SocketProcessorBase<S> sc = processorCache.pop();
             if (sc == null) {
                 sc = createSocketProcessor(socketWrapper, event);
             } else {
                 sc.reset(socketWrapper, event);
             }
+
+
+            //SocketProcessorBase是一个线程类，在这个线程类的run方法中，调用了org.apache.tomcat.util.net.SocketProcessorBase.doRun
+
             Executor executor = getExecutor();
             if (dispatch && executor != null) {
+                // 通过线程池的方式执行
                 executor.execute(sc);
             } else {
+                // 通过调用线程方法的方式进行执行
                 sc.run();
             }
         } catch (RejectedExecutionException ree) {
@@ -1211,8 +1216,7 @@ public abstract class AbstractEndpoint<S> {
     }
 
 
-    protected abstract SocketProcessorBase<S> createSocketProcessor(
-            SocketWrapperBase<S> socketWrapper, SocketEvent event);
+    protected abstract SocketProcessorBase<S> createSocketProcessor(SocketWrapperBase<S> socketWrapper, SocketEvent event);
 
 
     // ------------------------------------------------------- Lifecycle methods
@@ -1318,6 +1322,7 @@ public abstract class AbstractEndpoint<S> {
             acceptors[i] = createAcceptor();
             String threadName = getName() + "-Acceptor-" + i;
             acceptors[i].setThreadName(threadName);
+            // 启动接收线程，
             Thread t = new Thread(acceptors[i], threadName);
             t.setPriority(getAcceptorThreadPriority());
             t.setDaemon(getDaemon());

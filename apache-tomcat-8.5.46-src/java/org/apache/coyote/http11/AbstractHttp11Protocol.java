@@ -16,23 +16,7 @@
  */
 package org.apache.coyote.http11;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
-import javax.servlet.http.HttpUpgradeHandler;
-
-import org.apache.coyote.AbstractProtocol;
-import org.apache.coyote.CompressionConfig;
-import org.apache.coyote.Processor;
-import org.apache.coyote.UpgradeProtocol;
-import org.apache.coyote.UpgradeToken;
+import org.apache.coyote.*;
 import org.apache.coyote.http11.upgrade.InternalHttpUpgradeHandler;
 import org.apache.coyote.http11.upgrade.UpgradeProcessorExternal;
 import org.apache.coyote.http11.upgrade.UpgradeProcessorInternal;
@@ -41,6 +25,10 @@ import org.apache.tomcat.util.net.AbstractEndpoint;
 import org.apache.tomcat.util.net.SSLHostConfig;
 import org.apache.tomcat.util.net.SocketWrapperBase;
 import org.apache.tomcat.util.res.StringManager;
+
+import javax.servlet.http.HttpUpgradeHandler;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
 
@@ -873,21 +861,30 @@ public abstract class AbstractHttp11Protocol<S> extends AbstractProtocol<S> {
     @SuppressWarnings("deprecation")
     @Override
     protected Processor createProcessor() {
+        // 构建Http11Processor对象
         Http11Processor processor = new Http11Processor(getMaxHttpHeaderSize(),
                 getAllowHostHeaderMismatch(), getRejectIllegalHeaderName(), getEndpoint(),
                 getMaxTrailerSize(), allowedTrailerHeaders, getMaxExtensionSize(),
                 getMaxSwallowSize(), httpUpgradeProtocols, getSendReasonPhrase(),
                 relaxedPathChars, relaxedQueryChars);
+        // 设置适配器
         processor.setAdapter(getAdapter());
+        // 默认的keepAlive情况下，每个Socket处理的最多的请求次数
         processor.setMaxKeepAliveRequests(getMaxKeepAliveRequests());
+        // 开启keepAlive的timeout
         processor.setConnectionUploadTimeout(getConnectionUploadTimeout());
+        // 当遇到文件上传时，超时的时间
         processor.setDisableUploadTimeout(getDisableUploadTimeout());
+        // 当http请求的body size超过这个值的时候通过gzip进行压缩
         processor.setCompressionMinSize(getCompressionMinSize());
+        // http请求是否开启压缩。
         processor.setCompression(getCompression());
         processor.setNoCompressionUserAgents(getNoCompressionUserAgents());
         processor.setCompressibleMimeTypes(getCompressibleMimeTypes());
         processor.setRestrictedUserAgents(getRestrictedUserAgents());
+        // 最大Post处理尺寸的大小:4*1000
         processor.setMaxSavePostSize(getMaxSavePostSize());
+        // 把Server的名字封装给processor
         processor.setServer(getServer());
         processor.setServerRemoveAppProvidedValues(getServerRemoveAppProvidedValues());
         return processor;

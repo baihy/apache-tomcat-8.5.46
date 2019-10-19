@@ -16,14 +16,14 @@
  */
 package org.apache.catalina.core;
 
-import javax.servlet.DispatcherType;
-import javax.servlet.Servlet;
-import javax.servlet.ServletRequest;
-
 import org.apache.catalina.Globals;
 import org.apache.catalina.Wrapper;
 import org.apache.catalina.connector.Request;
 import org.apache.tomcat.util.descriptor.web.FilterMap;
+
+import javax.servlet.DispatcherType;
+import javax.servlet.Servlet;
+import javax.servlet.ServletRequest;
 
 /**
  * Factory for the creation and caching of Filters and creation
@@ -50,8 +50,7 @@ public final class ApplicationFilterFactory {
      * @return The configured FilterChain instance or null if none is to be
      *         executed.
      */
-    public static ApplicationFilterChain createFilterChain(ServletRequest request,
-            Wrapper wrapper, Servlet servlet) {
+    public static ApplicationFilterChain createFilterChain(ServletRequest request, Wrapper wrapper, Servlet servlet) {
 
         // If there is no servlet to execute, return null
         if (servlet == null)

@@ -16,11 +16,6 @@
  */
 package org.apache.coyote.http11;
 
-import java.io.EOFException;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
-
 import org.apache.coyote.InputBuffer;
 import org.apache.coyote.Request;
 import org.apache.juli.logging.Log;
@@ -32,6 +27,11 @@ import org.apache.tomcat.util.http.parser.HttpParser;
 import org.apache.tomcat.util.net.ApplicationBufferHandler;
 import org.apache.tomcat.util.net.SocketWrapperBase;
 import org.apache.tomcat.util.res.StringManager;
+
+import java.io.EOFException;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 /**
  * InputBuffer for HTTP that provides request header parsing as well as transfer
@@ -353,7 +353,7 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
         }
         //
         // Skipping blank lines
-        //
+        // 解析前两行，并跳过请求空行
         if (parsingRequestLinePhase < 2) {
             byte chr = 0;
             do {
@@ -399,8 +399,7 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
             parsingRequestLineStart = byteBuffer.position();
             parsingRequestLinePhase = 2;
             if (log.isDebugEnabled()) {
-                log.debug("Received ["
-                        + new String(byteBuffer.array(), byteBuffer.position(), byteBuffer.remaining(), StandardCharsets.ISO_8859_1) + "]");
+                log.debug("Received [" + new String(byteBuffer.array(), byteBuffer.position(), byteBuffer.remaining(), StandardCharsets.ISO_8859_1) + "]");
             }
         }
         if (parsingRequestLinePhase == 2) {
@@ -421,8 +420,7 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
                 byte chr = byteBuffer.get();
                 if (chr == Constants.SP || chr == Constants.HT) {
                     space = true;
-                    request.method().setBytes(byteBuffer.array(), parsingRequestLineStart,
-                            pos - parsingRequestLineStart);
+                    request.method().setBytes(byteBuffer.array(), parsingRequestLineStart, pos - parsingRequestLineStart);
                 } else if (!HttpParser.isToken(chr)) {
                     byteBuffer.position(byteBuffer.position() - 1);
                     // Avoid unknown protocol triggering an additional error
@@ -560,8 +558,7 @@ public class Http11InputBuffer implements InputBuffer, ApplicationBufferHandler 
             parsingRequestLineStart = 0;
             return true;
         }
-        throw new IllegalStateException(
-                "Invalid request line parse phase:" + parsingRequestLinePhase);
+        throw new IllegalStateException("Invalid request line parse phase:" + parsingRequestLinePhase);
     }
 
 

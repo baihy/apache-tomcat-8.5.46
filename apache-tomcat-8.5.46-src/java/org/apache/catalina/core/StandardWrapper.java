@@ -770,12 +770,13 @@ public class StandardWrapper extends ContainerBase implements ServletConfig, Wra
                 return instance;
             }
         }
-
+        // 通过对象池来完成的
         synchronized (instancePool) {
             while (countAllocated.get() >= nInstances) {
                 // Allocate a new instance if possible, or else wait
                 if (nInstances < maxInstances) {
                     try {
+                        //loadServlet()) 加载Servlet的
                         instancePool.push(loadServlet());
                         nInstances++;
                     } catch (ServletException e) {
@@ -796,6 +797,7 @@ public class StandardWrapper extends ContainerBase implements ServletConfig, Wra
                 log.trace("  Returning allocated STM instance");
             }
             countAllocated.incrementAndGet();
+            // Servlet 出站操作
             return instancePool.pop();
         }
     }
@@ -1010,6 +1012,7 @@ public class StandardWrapper extends ContainerBase implements ServletConfig, Wra
             // Servlet中，Servlet，Filter，Listener三个组件的管理器
             InstanceManager instanceManager = ((StandardContext) getParent()).getInstanceManager();
             try {
+                // 实例化Servlet对象
                 servlet = (Servlet) instanceManager.newInstance(servletClass);
             } catch (ClassCastException e) {
                 unavailable(null);
