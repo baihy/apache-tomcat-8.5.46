@@ -167,15 +167,13 @@ public class StandardContext extends ContainerBase implements Context, Notificat
     /**
      * The ordered set of ServletContainerInitializers for this web application.
      */
-    private Map<ServletContainerInitializer, Set<Class<?>>> initializers =
-            new LinkedHashMap<>();
+    private Map<ServletContainerInitializer, Set<Class<?>>> initializers = new LinkedHashMap<>();
 
 
     /**
      * The set of application parameters defined for this application.
      */
-    private ApplicationParameter applicationParameters[] =
-            new ApplicationParameter[0];
+    private ApplicationParameter applicationParameters[] = new ApplicationParameter[0];
 
     private final Object applicationParametersLock = new Object();
 
@@ -1184,8 +1182,7 @@ public class StandardContext extends ContainerBase implements Context, Notificat
      *                interest
      */
     @Override
-    public void addServletContainerInitializer(
-            ServletContainerInitializer sci, Set<Class<?>> classes) {
+    public void addServletContainerInitializer(ServletContainerInitializer sci, Set<Class<?>> classes) {
         initializers.put(sci, classes);
     }
 
@@ -5082,10 +5079,9 @@ public class StandardContext extends ContainerBase implements Context, Notificat
             mergeParameters();
 
             // Call ServletContainerInitializers
-            for (Map.Entry<ServletContainerInitializer, Set<Class<?>>> entry :
-                    initializers.entrySet()) {
+            for (Map.Entry<ServletContainerInitializer, Set<Class<?>>> entry : initializers.entrySet()) {
                 try {
-                    // 初始化Servlet对象
+                    // tomcat调用了ServletContainerInitializer实现这个接口的类，并调用了onStartup方法
                     entry.getKey().onStartup(entry.getValue(), getServletContext());
                 } catch (ServletException e) {
                     log.error(sm.getString("standardContext.sciFail"), e);

@@ -158,8 +158,7 @@ public class ContextConfig implements LifecycleListener {
     /**
      * Map of ServletContainerInitializer to classes they expressed interest in.
      */
-    protected final Map<ServletContainerInitializer, Set<Class<?>>> initializerClassMap =
-            new LinkedHashMap<>();
+    protected final Map<ServletContainerInitializer, Set<Class<?>>> initializerClassMap = new LinkedHashMap<>();
 
     /**
      * Map of Types to ServletContainerInitializer that are interested in those
@@ -723,6 +722,7 @@ public class ContextConfig implements LifecycleListener {
          * 这在Tomcat6/7是没有这个问题的。解决办法是在tomcat的源码org.apache.catalina.startup.ContextConfig中手动将JSP解析器初始化
          */
         // todo huayang.bai
+        //JasperInitializer是ServletContainerInitializer的实现类，这个类会在tomcat的启动过程执行，调用onStartup方法。
         context.addServletContainerInitializer(new JasperInitializer(), null);
 
 
@@ -1155,12 +1155,9 @@ public class ContextConfig implements LifecycleListener {
         // Step 11. Apply the ServletContainerInitializer config to the
         // context
         if (ok) {
-            for (Map.Entry<ServletContainerInitializer,
-                    Set<Class<?>>> entry :
-                    initializerClassMap.entrySet()) {
+            for (Map.Entry<ServletContainerInitializer, Set<Class<?>>> entry : initializerClassMap.entrySet()) {
                 if (entry.getValue().isEmpty()) {
-                    context.addServletContainerInitializer(
-                            entry.getKey(), null);
+                    context.addServletContainerInitializer(entry.getKey(), null);
                 } else {
                     context.addServletContainerInitializer(entry.getKey(), entry.getValue());
                 }
@@ -1580,6 +1577,7 @@ public class ContextConfig implements LifecycleListener {
 
         List<ServletContainerInitializer> detectedScis;
         try {
+            /*****Servlet3.0的核心操作功能：通过WebappServiceLoader加载环境中的所有ServletContainerInitializer接口的实现类****/
             WebappServiceLoader<ServletContainerInitializer> loader = new WebappServiceLoader<>(context);
             detectedScis = loader.load(ServletContainerInitializer.class);
         } catch (IOException e) {
