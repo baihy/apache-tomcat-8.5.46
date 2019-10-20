@@ -164,8 +164,7 @@ public class ContextConfig implements LifecycleListener {
      * Map of Types to ServletContainerInitializer that are interested in those
      * types.
      */
-    protected final Map<Class<?>, Set<ServletContainerInitializer>> typeInitializerMap =
-            new HashMap<>();
+    protected final Map<Class<?>, Set<ServletContainerInitializer>> typeInitializerMap = new HashMap<>();
 
     /**
      * Flag that indicates if at least one {@link HandlesTypes} entry is present
