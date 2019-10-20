@@ -2099,8 +2099,7 @@ public class ContextConfig implements LifecycleListener {
         if (handlesTypesAnnotations) {
             AnnotationEntry[] annotationEntries = javaClass.getAnnotationEntries();
             if (annotationEntries != null) {
-                for (Map.Entry<Class<?>, Set<ServletContainerInitializer>> entry :
-                        typeInitializerMap.entrySet()) {
+                for (Map.Entry<Class<?>, Set<ServletContainerInitializer>> entry : typeInitializerMap.entrySet()) {
                     if (entry.getKey().isAnnotation()) {
                         String entryClassName = entry.getKey().getName();
                         for (AnnotationEntry annotationEntry : annotationEntries) {
