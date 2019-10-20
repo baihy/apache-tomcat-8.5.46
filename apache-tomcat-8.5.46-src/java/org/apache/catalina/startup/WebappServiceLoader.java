@@ -16,25 +16,15 @@
  */
 package org.apache.catalina.startup;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.regex.Pattern;
-
-import javax.servlet.ServletContext;
-
 import org.apache.catalina.Context;
 import org.apache.tomcat.util.scan.JarFactory;
+
+import javax.servlet.ServletContext;
+import java.io.*;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * A variation of Java's JAR ServiceLoader that respects exclusion rules for
@@ -89,6 +79,7 @@ public class WebappServiceLoader<T> {
      * @throws IOException if there was a problem loading any service
      */
     public List<T> load(Class<T> serviceType) throws IOException {
+        // 注意：这里是load的是"META-INF/services/"文件夹下，并且通过以指定接口名称命名的文件里面配置的实现类
         String configFile = SERVICES + serviceType.getName();
 
         LinkedHashSet<String> applicationServicesFound = new LinkedHashSet<>();
@@ -99,8 +90,7 @@ public class WebappServiceLoader<T> {
         // if the ServletContext has ORDERED_LIBS, then use that to specify the
         // set of JARs from WEB-INF/lib that should be used for loading services
         @SuppressWarnings("unchecked")
-        List<String> orderedLibs =
-                (List<String>) servletContext.getAttribute(ServletContext.ORDERED_LIBS);
+        List<String> orderedLibs = (List<String>) servletContext.getAttribute(ServletContext.ORDERED_LIBS);
         if (orderedLibs != null) {
             // handle ordered libs directly, ...
             for (String lib : orderedLibs) {
@@ -179,8 +169,7 @@ public class WebappServiceLoader<T> {
         }
     }
 
-    List<T> loadServices(Class<T> serviceType, LinkedHashSet<String> servicesFound)
-            throws IOException {
+    List<T> loadServices(Class<T> serviceType, LinkedHashSet<String> servicesFound) throws IOException {
         ClassLoader loader = servletContext.getClassLoader();
         List<T> services = new ArrayList<>(servicesFound.size());
         for (String serviceClass : servicesFound) {

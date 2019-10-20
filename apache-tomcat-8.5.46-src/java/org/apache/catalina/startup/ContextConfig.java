@@ -1580,28 +1580,21 @@ public class ContextConfig implements LifecycleListener {
             WebappServiceLoader<ServletContainerInitializer> loader = new WebappServiceLoader<>(context);
             detectedScis = loader.load(ServletContainerInitializer.class);
         } catch (IOException e) {
-            log.error(sm.getString(
-                    "contextConfig.servletContainerInitializerFail",
-                    context.getName()),
-                    e);
+            log.error(sm.getString("contextConfig.servletContainerInitializerFail", context.getName()), e);
             ok = false;
             return;
         }
 
         for (ServletContainerInitializer sci : detectedScis) {
             initializerClassMap.put(sci, new HashSet<Class<?>>());
-
             HandlesTypes ht;
             try {
                 ht = sci.getClass().getAnnotation(HandlesTypes.class);
             } catch (Exception e) {
                 if (log.isDebugEnabled()) {
-                    log.info(sm.getString("contextConfig.sci.debug",
-                            sci.getClass().getName()),
-                            e);
+                    log.info(sm.getString("contextConfig.sci.debug", sci.getClass().getName()), e);
                 } else {
-                    log.info(sm.getString("contextConfig.sci.info",
-                            sci.getClass().getName()));
+                    log.info(sm.getString("contextConfig.sci.info", sci.getClass().getName()));
                 }
                 continue;
             }
@@ -1619,8 +1612,7 @@ public class ContextConfig implements LifecycleListener {
                 } else {
                     handlesTypesNonAnnotations = true;
                 }
-                Set<ServletContainerInitializer> scis =
-                        typeInitializerMap.get(type);
+                Set<ServletContainerInitializer> scis = typeInitializerMap.get(type);
                 if (scis == null) {
                     scis = new HashSet<>();
                     typeInitializerMap.put(type, scis);
@@ -2102,11 +2094,9 @@ public class ContextConfig implements LifecycleListener {
                     if (entry.getKey().isAnnotation()) {
                         String entryClassName = entry.getKey().getName();
                         for (AnnotationEntry annotationEntry : annotationEntries) {
-                            if (entryClassName.equals(
-                                    getClassName(annotationEntry.getAnnotationType()))) {
+                            if (entryClassName.equals(getClassName(annotationEntry.getAnnotationType()))) {
                                 if (clazz == null) {
-                                    clazz = Introspection.loadClass(
-                                            context, className);
+                                    clazz = Introspection.loadClass(context, className);
                                     if (clazz == null) {
                                         // Can't load the class so no point
                                         // continuing
