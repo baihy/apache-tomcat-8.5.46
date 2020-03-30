@@ -55,7 +55,6 @@ public class Connector extends LifecycleMBeanBase {
 
     private static final Log log = LogFactory.getLog(Connector.class);
 
-
     /**
      * Alternate flag to enable recycling of facades.
      */
@@ -70,7 +69,7 @@ public class Connector extends LifecycleMBeanBase {
     }
 
     public Connector(String protocol) {
-        // 设置协议
+        // 设置协议，可以，通过protocol="HTTP/1.1"属性，值也可以是协议处理类
         setProtocol(protocol);
         // Instantiate protocol handler
         ProtocolHandler p = null;
@@ -580,9 +579,8 @@ public class Connector extends LifecycleMBeanBase {
      */
     @Deprecated
     public void setProtocol(String protocol) {
-
         boolean aprConnector = AprLifecycleListener.isAprAvailable() && AprLifecycleListener.getUseAprConnector();
-        if ("HTTP/1.1".equals(protocol) || protocol == null) {
+        if ("HTTP/1.1".equals(protocol) || protocol == null) {// 默认协议
             if (aprConnector) {
                 setProtocolHandlerClassName("org.apache.coyote.http11.Http11AprProtocol");
             } else {
@@ -973,7 +971,8 @@ public class Connector extends LifecycleMBeanBase {
         }
 
         if (protocolHandler.isAprRequired() && !AprLifecycleListener.isAprAvailable()) {
-            throw new LifecycleException(sm.getString("coyoteConnector.protocolHandlerNoApr", getProtocolHandlerClassName()));
+            throw new LifecycleException(sm.getString("coyoteConnector.protocolHandlerNoApr",
+                    getProtocolHandlerClassName()));
         }
         if (AprLifecycleListener.isAprAvailable() && AprLifecycleListener.getUseOpenSSL() && protocolHandler instanceof AbstractHttp11JsseProtocol) {
             AbstractHttp11JsseProtocol<?> jsseProtocolHandler = (AbstractHttp11JsseProtocol<?>) protocolHandler;

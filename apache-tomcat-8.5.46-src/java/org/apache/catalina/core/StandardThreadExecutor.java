@@ -17,9 +17,6 @@
 
 package org.apache.catalina.core;
 
-import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.TimeUnit;
-
 import org.apache.catalina.Executor;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.LifecycleState;
@@ -28,6 +25,9 @@ import org.apache.tomcat.util.threads.ResizableExecutor;
 import org.apache.tomcat.util.threads.TaskQueue;
 import org.apache.tomcat.util.threads.TaskThreadFactory;
 import org.apache.tomcat.util.threads.ThreadPoolExecutor;
+
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.TimeUnit;
 
 public class StandardThreadExecutor extends LifecycleMBeanBase
         implements Executor, ResizableExecutor {
@@ -50,11 +50,13 @@ public class StandardThreadExecutor extends LifecycleMBeanBase
 
     /**
      * max number of threads
+     * Tomcat使用线程来处理接收的每个请求。这个值表示Tomcat可创建的最大的线程数。默认值200
      */
     protected int maxThreads = 200;
 
     /**
      * min number of threads
+     * Tomcat初始化时创建的线程数
      */
     protected int minSpareThreads = 25;
 
@@ -89,9 +91,10 @@ public class StandardThreadExecutor extends LifecycleMBeanBase
      * threads being renewed.
      */
     protected long threadRenewalDelay =
-        org.apache.tomcat.util.threads.Constants.DEFAULT_THREAD_RENEWAL_DELAY;
+            org.apache.tomcat.util.threads.Constants.DEFAULT_THREAD_RENEWAL_DELAY;
 
     private TaskQueue taskqueue = null;
+
     // ---------------------------------------------- Constructors
     public StandardThreadExecutor() {
         //empty constructor for the digester
@@ -110,15 +113,16 @@ public class StandardThreadExecutor extends LifecycleMBeanBase
      * Start the component and implement the requirements
      * of {@link org.apache.catalina.util.LifecycleBase#startInternal()}.
      *
-     * @exception LifecycleException if this component detects a fatal error
-     *  that prevents this component from being used
+     * @throws LifecycleException if this component detects a fatal error
+     *                            that prevents this component from being used
      */
     @Override
     protected void startInternal() throws LifecycleException {
 
         taskqueue = new TaskQueue(maxQueueSize);
-        TaskThreadFactory tf = new TaskThreadFactory(namePrefix,daemon,getThreadPriority());
-        executor = new ThreadPoolExecutor(getMinSpareThreads(), getMaxThreads(), maxIdleTime, TimeUnit.MILLISECONDS,taskqueue, tf);
+        TaskThreadFactory tf = new TaskThreadFactory(namePrefix, daemon, getThreadPriority());
+        executor = new ThreadPoolExecutor(getMinSpareThreads(), getMaxThreads(), maxIdleTime, TimeUnit.MILLISECONDS,
+                taskqueue, tf);
         executor.setThreadRenewalDelay(threadRenewalDelay);
         if (prestartminSpareThreads) {
             executor.prestartAllCoreThreads();
@@ -133,14 +137,14 @@ public class StandardThreadExecutor extends LifecycleMBeanBase
      * Stop the component and implement the requirements
      * of {@link org.apache.catalina.util.LifecycleBase#stopInternal()}.
      *
-     * @exception LifecycleException if this component detects a fatal error
-     *  that needs to be reported
+     * @throws LifecycleException if this component detects a fatal error
+     *                            that needs to be reported
      */
     @Override
     protected void stopInternal() throws LifecycleException {
 
         setState(LifecycleState.STOPPING);
-        if ( executor != null ) executor.shutdownNow();
+        if (executor != null) executor.shutdownNow();
         executor = null;
         taskqueue = null;
     }
@@ -154,8 +158,8 @@ public class StandardThreadExecutor extends LifecycleMBeanBase
 
     @Override
     public void execute(Runnable command, long timeout, TimeUnit unit) {
-        if ( executor != null ) {
-            executor.execute(command,timeout,unit);
+        if (executor != null) {
+            executor.execute(command, timeout, unit);
         } else {
             throw new IllegalStateException("StandardThreadExecutor not started.");
         }
@@ -164,12 +168,13 @@ public class StandardThreadExecutor extends LifecycleMBeanBase
 
     @Override
     public void execute(Runnable command) {
-        if ( executor != null ) {
+        if (executor != null) {
             try {
                 executor.execute(command);
             } catch (RejectedExecutionException rx) {
                 //there could have been contention around the queue
-                if ( !( (TaskQueue) executor.getQueue()).force(command) ) throw new RejectedExecutionException("Work queue full.");
+                if (!((TaskQueue) executor.getQueue()).force(command))
+                    throw new RejectedExecutionException("Work queue full.");
             }
         } else throw new IllegalStateException("StandardThreadPool not started.");
     }
@@ -215,6 +220,7 @@ public class StandardThreadExecutor extends LifecycleMBeanBase
 
         return prestartminSpareThreads;
     }
+
     public void setThreadPriority(int threadPriority) {
         this.threadPriority = threadPriority;
     }
