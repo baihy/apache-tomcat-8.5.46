@@ -1585,6 +1585,7 @@ public class ContextConfig implements LifecycleListener {
             return;
         }
 
+        // detectedScis是通过spi机制配置的实现了ServletContainerInitializer接口的实现类
         for (ServletContainerInitializer sci : detectedScis) {
             initializerClassMap.put(sci, new HashSet<Class<?>>());
             HandlesTypes ht;
@@ -1601,6 +1602,7 @@ public class ContextConfig implements LifecycleListener {
             if (ht == null) {
                 continue;
             }
+            // 获取到@HandlesTypes注解指定的类
             Class<?>[] types = ht.value();
             if (types == null) {
                 continue;
@@ -2221,8 +2223,7 @@ public class ContextConfig implements LifecycleListener {
     }
 
     private Set<ServletContainerInitializer> getSCIsForClass(String className) {
-        for (Map.Entry<Class<?>, Set<ServletContainerInitializer>> entry :
-                typeInitializerMap.entrySet()) {
+        for (Map.Entry<Class<?>, Set<ServletContainerInitializer>> entry : typeInitializerMap.entrySet()) {
             Class<?> clazz = entry.getKey();
             if (!clazz.isAnnotation()) {
                 if (clazz.getName().equals(className)) {
